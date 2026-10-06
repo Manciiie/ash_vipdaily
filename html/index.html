@@ -14,40 +14,74 @@
                 <span class="ash-sous-titre" id="titre">Récompenses VIP</span>
             </div>
             <nav class="ash-onglets">
-                <button class="ash-onglet actif" data-onglet="jour"><span class="ash-num">01</span>Aujourd'hui</button>
-                <button class="ash-onglet" data-onglet="infos"><span class="ash-num">02</span>Ma série</button>
+                <button class="ash-onglet actif" data-onglet="calendrier"><span class="ash-num">01</span>Calendrier</button>
+                <button class="ash-onglet" data-onglet="serie"><span class="ash-num">02</span>Ma série</button>
             </nav>
         </header>
 
-        <main class="ash-contenu">
-            <section class="ash-page actif" data-page="jour">
-                <h2 class="ash-h2">Récompense du jour</h2>
+        <main class="ash-contenu vip-contenu">
+            <section class="ash-page actif vip-page-calendrier" data-page="calendrier">
 
-                <div class="ash-carte vip-bandeau" id="bandeau-non-vip" hidden>
-                    <p class="ash-texte-2">Les récompenses quotidiennes sont réservées aux joueurs ayant le grade <strong>VIP</strong>.</p>
-                </div>
-
-                <div class="vip-grille" id="grille"></div>
-
-                <div class="ash-carte vip-action">
-                    <div>
-                        <strong id="statut">—</strong>
-                        <p class="ash-texte-2" id="sous-statut"></p>
+                <!-- Récompense mise en avant (du jour, ou jour sélectionné) -->
+                <aside class="vip-hero" id="hero">
+                    <div class="vip-hero-haut">
+                        <span class="vip-etiquette" id="hero-etiquette">Récompense du jour</span>
+                        <span class="vip-badge" id="hero-badge" hidden>★ Palier</span>
                     </div>
-                    <button class="ash-bouton" id="btn-recuperer" disabled>Récupérer</button>
+                    <div class="vip-hero-jour">
+                        <span class="vip-hero-num" id="hero-num">—</span>
+                        <span class="vip-hero-sur" id="hero-sur">/ 31</span>
+                    </div>
+
+                    <div class="vip-hero-argent" id="hero-argent">
+                        <strong id="hero-montant">—</strong>
+                        <span id="hero-compte"></span>
+                    </div>
+                    <div class="vip-puces" id="hero-items"></div>
+
+                    <div class="vip-hero-bas">
+                        <div class="vip-progression">
+                            <div class="vip-progression-texte">
+                                <span>Progression du cycle</span>
+                                <strong id="hero-progression">0 / 31</strong>
+                            </div>
+                            <div class="vip-barre"><div class="vip-barre-rempli" id="hero-barre"></div><div class="vip-reperes" id="hero-reperes"></div></div>
+                            <p class="vip-palier-suivant" id="hero-palier"></p>
+                        </div>
+
+                        <button class="ash-bouton vip-recuperer" id="btn-recuperer" disabled>
+                            <span id="btn-texte">Récupérer</span>
+                        </button>
+                        <p class="vip-sous-bouton" id="sous-bouton"></p>
+                    </div>
+                </aside>
+
+                <!-- Calendrier 31 jours -->
+                <div class="vip-calendrier">
+                    <div class="vip-calendrier-entete">
+                        <span>Cycle de <strong id="nb-jours">31</strong> jours</span>
+                        <span class="vip-legende">
+                            <i class="vip-pastille passe"></i>Récupéré
+                            <i class="vip-pastille courant"></i>À récupérer
+                            <i class="vip-pastille gros"></i>Palier
+                        </span>
+                    </div>
+                    <div class="vip-grille" id="grille"></div>
                 </div>
             </section>
 
-            <section class="ash-page" data-page="infos">
+            <section class="ash-page" data-page="serie">
                 <h2 class="ash-h2">Ma série</h2>
+                <div class="vip-stats">
+                    <div class="vip-stat"><span>Jours consécutifs</span><strong id="info-serie">—</strong></div>
+                    <div class="vip-stat"><span>Récompenses récupérées</span><strong id="info-total">—</strong></div>
+                    <div class="vip-stat"><span>Prochaine récompense</span><strong id="info-reinit">—</strong></div>
+                </div>
                 <div class="ash-carte">
                     <div class="ash-ligne"><span>Joueur</span><strong id="info-joueur">—</strong></div>
                     <div class="ash-ligne"><span>Statut</span><strong id="info-vip">—</strong></div>
-                    <div class="ash-ligne"><span>Jours consécutifs</span><strong id="info-serie">—</strong></div>
-                    <div class="ash-ligne"><span>Récompenses récupérées</span><strong id="info-total">—</strong></div>
-                    <div class="ash-ligne"><span>Prochaine récompense dans</span><strong id="info-reinit">—</strong></div>
                 </div>
-                <p class="ash-texte-2 vip-note">Récupérez chaque jour pour avancer dans le cycle : 31 jours, avec des paliers aux jours 7, 14, 21, 28 et 31 (★), le jour 31 étant le plus gros.</p>
+                <p class="ash-texte-2 vip-note">Récupérez chaque jour pour avancer dans le cycle. Les paliers (★) donnent les plus grosses récompenses, le dernier jour étant le plus gros. Un jour manqué peut remettre la série à zéro.</p>
             </section>
         </main>
 

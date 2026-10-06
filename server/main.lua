@@ -142,22 +142,27 @@ local function indexRecompense(serie)
     return ((serie - 1) % #Config.Recompenses) + 1
 end
 
---- Version affichable des récompenses (labels et montants uniquement)
+--- Version affichable des récompenses (labels et montants uniquement, jamais les noms d'items)
+--- Calculée une seule fois : la config ne change pas en cours de partie
+local cacheListe
 local function listeRecompenses()
-    local liste = {}
+    if cacheListe then return cacheListe end
+    cacheListe = {}
     for i, r in ipairs(Config.Recompenses) do
-        local lignes = {}
-        if r.argent then
-            lignes[#lignes + 1] = ('%s $%s'):format(
-                r.argent.compte == 'cash' and _L('liquide') or _L('banque'),
-                math.floor(r.argent.montant))
-        end
+        local items = {}
         for _, item in ipairs(r.items or {}) do
-            lignes[#lignes + 1] = ('%dx %s'):format(item.quantite, item.label or item.nom)
+            items[#items + 1] = { label = item.label or item.nom, quantite = math.floor(item.quantite or 0) }
         end
-        liste[i] = { lignes = lignes, gros = r.gros == true }
+        cacheListe[i] = {
+            argent = r.argent and {
+                compte = r.argent.compte == 'cash' and 'cash' or 'bank',
+                montant = math.floor(r.argent.montant or 0),
+            } or nil,
+            items = items,
+            gros = r.gros == true,
+        }
     end
-    return liste
+    return cacheListe
 end
 
 -- Base de données -----------------------------------------------------------------
