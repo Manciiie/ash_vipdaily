@@ -1,0 +1,245 @@
+/* Thème ASH City — commun à toutes les interfaces ash_* */
+
+:root {
+    --ash-fond:          rgba(16, 11, 28, 0.96);
+    --ash-fond-2:        rgba(30, 21, 52, 0.85);
+    --ash-fond-3:        rgba(44, 31, 76, 0.75);
+    --ash-bordure:       rgba(155, 108, 255, 0.22);
+    --ash-violet:        #9b6cff;
+    --ash-violet-clair:  #b896ff;
+    --ash-violet-fonce:  #6d3fe0;
+    --ash-vert:          #3ddc84;
+    --ash-rouge:         #ff5c7a;
+    --ash-texte:         #ece8f5;
+    --ash-texte-2:       #9a93ad;
+    --ash-rayon:         14px;
+    --ash-police:        'Segoe UI', 'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Le fond doit rester transparent : on voit le jeu derrière */
+html, body {
+    background: transparent;
+    font-family: var(--ash-police);
+    color: var(--ash-texte);
+    overflow: hidden;
+    user-select: none;
+}
+
+.ash-panneau {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: min(960px, 92vw);
+    height: min(600px, 88vh);
+    display: flex;
+    flex-direction: column;
+    background: var(--ash-fond);
+    border: 1px solid var(--ash-bordure);
+    border-radius: var(--ash-rayon);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.ash-panneau.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+}
+
+/* En-tête ------------------------------------------------------------------ */
+
+.ash-entete {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 22px 28px 0;
+    border-bottom: 1px solid var(--ash-bordure);
+}
+
+.ash-marque { display: flex; align-items: baseline; gap: 14px; padding-bottom: 16px; }
+
+.ash-logo {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    position: relative;
+    padding-right: 12px;
+}
+
+.ash-point {
+    position: absolute;
+    right: 0; bottom: 6px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--ash-vert);
+    box-shadow: 0 0 10px var(--ash-vert);
+}
+
+.ash-sous-titre {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--ash-texte-2);
+}
+
+/* Onglets numérotés soulignés ------------------------------------------------- */
+
+.ash-onglets { display: flex; gap: 6px; }
+
+.ash-onglet {
+    background: none;
+    border: none;
+    color: var(--ash-texte-2);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0 14px 14px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.ash-onglet:hover { color: var(--ash-texte); }
+
+.ash-onglet.actif {
+    color: var(--ash-texte);
+    border-bottom-color: var(--ash-violet);
+}
+
+.ash-num {
+    font-size: 11px;
+    color: var(--ash-violet);
+    margin-right: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Contenu --------------------------------------------------------------------- */
+
+.ash-contenu { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+.ash-contenu::-webkit-scrollbar { width: 6px; }
+.ash-contenu::-webkit-scrollbar-thumb { background: var(--ash-bordure); border-radius: 3px; }
+
+.ash-page { display: none; }
+.ash-page.actif { display: block; animation: ash-apparition 0.18s ease; }
+
+@keyframes ash-apparition {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.ash-h2 {
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+}
+
+.ash-carte {
+    background: var(--ash-fond-2);
+    border: 1px solid var(--ash-bordure);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ash-ligne { display: flex; justify-content: space-between; font-size: 14px; }
+.ash-ligne span { color: var(--ash-texte-2); }
+
+.ash-texte-2 { color: var(--ash-texte-2); font-size: 14px; }
+
+/* Boutons ----------------------------------------------------------------------- */
+
+.ash-bouton {
+    align-self: flex-start;
+    background: linear-gradient(180deg, var(--ash-violet), var(--ash-violet-fonce));
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+}
+
+.ash-bouton:hover { filter: brightness(1.12); }
+.ash-bouton:active { transform: scale(0.98); }
+.ash-bouton:disabled { opacity: 0.5; cursor: default; }
+
+.ash-bouton.secondaire {
+    background: var(--ash-fond-3);
+    border: 1px solid var(--ash-bordure);
+}
+
+.ash-bouton.danger { background: linear-gradient(180deg, var(--ash-rouge), #c93a55); }
+
+/* Pied ---------------------------------------------------------------------------- */
+
+.ash-pied {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 28px;
+    border-top: 1px solid var(--ash-bordure);
+    font-size: 12px;
+    color: var(--ash-texte-2);
+}
+
+kbd {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ash-texte);
+    background: var(--ash-fond-3);
+    border: 1px solid var(--ash-bordure);
+    border-radius: 5px;
+    padding: 2px 7px;
+    margin-right: 6px;
+}
+
+/* ash_vipdaily ------------------------------------------------------------------ */
+.vip-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.vip-jour {
+    position: relative;
+    background: var(--ash-fond-2);
+    border: 1px solid var(--ash-bordure);
+    border-radius: var(--ash-rayon);
+    padding: 12px;
+    min-height: 104px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    opacity: 0.55;
+    transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+.vip-jour .vip-num { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ash-texte-2); }
+.vip-jour .vip-lot { font-size: 13px; line-height: 1.35; }
+.vip-jour.gros { background: var(--ash-fond-3); }
+.vip-jour.passe { opacity: 0.4; }
+.vip-jour.passe::after {
+    content: '✓';
+    position: absolute; top: 10px; right: 12px;
+    color: var(--ash-vert); font-weight: 700;
+}
+.vip-jour.courant {
+    opacity: 1;
+    border-color: var(--ash-violet);
+    box-shadow: 0 0 0 1px var(--ash-violet), 0 0 18px rgba(155, 108, 255, 0.25);
+}
+.vip-action { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.vip-action p { margin: 4px 0 0; }
+.vip-bandeau { border-color: var(--ash-rouge); }
+.vip-note { margin-top: 12px; }

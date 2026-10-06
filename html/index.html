@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Récompenses VIP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="ash-panneau" aria-hidden="true">
+
+        <header class="ash-entete">
+            <div class="ash-marque">
+                <span class="ash-logo">ASH<span class="ash-point"></span></span>
+                <span class="ash-sous-titre" id="titre">Récompenses VIP</span>
+            </div>
+            <nav class="ash-onglets">
+                <button class="ash-onglet actif" data-onglet="jour"><span class="ash-num">01</span>Aujourd'hui</button>
+                <button class="ash-onglet" data-onglet="infos"><span class="ash-num">02</span>Ma série</button>
+            </nav>
+        </header>
+
+        <main class="ash-contenu">
+            <section class="ash-page actif" data-page="jour">
+                <h2 class="ash-h2">Récompense du jour</h2>
+
+                <div class="ash-carte vip-bandeau" id="bandeau-non-vip" hidden>
+                    <p class="ash-texte-2">Les récompenses quotidiennes sont réservées aux joueurs ayant le grade <strong>VIP</strong>.</p>
+                </div>
+
+                <div class="vip-grille" id="grille"></div>
+
+                <div class="ash-carte vip-action">
+                    <div>
+                        <strong id="statut">—</strong>
+                        <p class="ash-texte-2" id="sous-statut"></p>
+                    </div>
+                    <button class="ash-bouton" id="btn-recuperer" disabled>Récupérer</button>
+                </div>
+            </section>
+
+            <section class="ash-page" data-page="infos">
+                <h2 class="ash-h2">Ma série</h2>
+                <div class="ash-carte">
+                    <div class="ash-ligne"><span>Joueur</span><strong id="info-joueur">—</strong></div>
+                    <div class="ash-ligne"><span>Statut</span><strong id="info-vip">—</strong></div>
+                    <div class="ash-ligne"><span>Jours consécutifs</span><strong id="info-serie">—</strong></div>
+                    <div class="ash-ligne"><span>Récompenses récupérées</span><strong id="info-total">—</strong></div>
+                    <div class="ash-ligne"><span>Prochaine récompense dans</span><strong id="info-reinit">—</strong></div>
+                </div>
+                <p class="ash-texte-2 vip-note">Récupérez chaque jour pour avancer dans le cycle : le dernier jour donne la plus grosse récompense.</p>
+            </section>
+        </main>
+
+        <footer class="ash-pied">
+            <span>ASH City / Roleplay</span>
+            <span><kbd>ÉCHAP</kbd> Fermer</span>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
