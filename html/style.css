@@ -208,8 +208,8 @@ kbd {
 /* ash_vipdaily ------------------------------------------------------------------ */
 .vip-grille {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 8px;
     margin-bottom: 16px;
 }
 .vip-jour {
@@ -217,17 +217,18 @@ kbd {
     background: var(--ash-fond-2);
     border: 1px solid var(--ash-bordure);
     border-radius: var(--ash-rayon);
-    padding: 12px;
-    min-height: 104px;
+    padding: 10px;
+    min-height: 84px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     opacity: 0.55;
     transition: opacity 0.15s ease, border-color 0.15s ease;
 }
 .vip-jour .vip-num { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ash-texte-2); }
-.vip-jour .vip-lot { font-size: 13px; line-height: 1.35; }
-.vip-jour.gros { background: var(--ash-fond-3); }
+.vip-jour .vip-lot { font-size: 12px; line-height: 1.3; }
+.vip-jour.gros { background: var(--ash-fond-3); border-color: rgba(61, 220, 132, 0.45); }
+.vip-jour.gros .vip-num { color: var(--ash-vert); }
 .vip-jour.passe { opacity: 0.4; }
 .vip-jour.passe::after {
     content: '✓';

@@ -1,7 +1,7 @@
 # ash_vipdaily — Récompenses VIP quotidiennes
 
 Les joueurs VIP récupèrent une récompense par jour (argent et/ou items) dans un panneau au thème ASH.
-Cycle de 7 jours (modifiable) : récupérer chaque jour fait avancer la série, le dernier jour est le plus gros.
+Cycle de 31 jours : récupérer chaque jour fait avancer la série. Paliers aux jours 7, 14, 21, 28 et 31 (le plus gros), puis retour au jour 1.
 
 ## Installation (Nitrado)
 

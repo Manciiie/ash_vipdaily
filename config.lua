@@ -59,20 +59,45 @@ Config.HeureReinitialisation = 6
 Config.SerieStricte = true
 
 -------------------------------------------------------------------------------------
--- Récompenses : une entrée par jour de la série, le cycle recommence après le dernier
+-- Récompenses : 31 jours (une entrée par jour), le cycle recommence au jour 1 après le jour 31
+-- Paliers (gros = true, mis en avant) : jours 7, 14, 21, 28 et 31
 -------------------------------------------------------------------------------------
 -- argent : { compte = 'cash' | 'bank', montant = nombre }
 -- items  : { { nom = 'nom_item', quantite = nombre, label = 'Nom affiché' }, ... }
 -- ⚠ Valeurs d'exemple : adaptez les montants et les noms d'items à votre serveur.
 
 Config.Recompenses = {
-    { argent = { compte = 'bank', montant = 2500 } },
-    { argent = { compte = 'bank', montant = 3000 }, items = { { nom = 'sandwich', quantite = 3, label = 'Sandwich' } } },
-    { argent = { compte = 'bank', montant = 3500 } },
-    { argent = { compte = 'bank', montant = 4000 }, items = { { nom = 'water_bottle', quantite = 3, label = "Bouteille d'eau" } } },
-    { argent = { compte = 'bank', montant = 5000 } },
-    { argent = { compte = 'bank', montant = 6000 }, items = { { nom = 'repairkit', quantite = 1, label = 'Kit de réparation' } } },
-    { argent = { compte = 'bank', montant = 10000 }, items = { { nom = 'lockpick', quantite = 2, label = 'Crochet' } }, gros = true },
+    { argent = { compte = 'bank', montant = 2000 } }, -- jour 1
+    { argent = { compte = 'bank', montant = 2200 } }, -- jour 2
+    { argent = { compte = 'bank', montant = 2400 }, items = { { nom = 'water_bottle', quantite = 3, label = "Bouteille d'eau" } } }, -- jour 3
+    { argent = { compte = 'bank', montant = 2600 } }, -- jour 4
+    { argent = { compte = 'bank', montant = 2800 } }, -- jour 5
+    { argent = { compte = 'bank', montant = 3000 }, items = { { nom = 'bandage', quantite = 3, label = 'Bandage' } } }, -- jour 6
+    { argent = { compte = 'bank', montant = 10000 }, items = { { nom = 'repairkit', quantite = 1, label = 'Kit de réparation' } }, gros = true }, -- jour 7
+    { argent = { compte = 'bank', montant = 3400 } }, -- jour 8
+    { argent = { compte = 'bank', montant = 3600 }, items = { { nom = 'sandwich', quantite = 3, label = 'Sandwich' } } }, -- jour 9
+    { argent = { compte = 'bank', montant = 3800 } }, -- jour 10
+    { argent = { compte = 'bank', montant = 4000 } }, -- jour 11
+    { argent = { compte = 'bank', montant = 4200 }, items = { { nom = 'water_bottle', quantite = 3, label = "Bouteille d'eau" } } }, -- jour 12
+    { argent = { compte = 'bank', montant = 4400 } }, -- jour 13
+    { argent = { compte = 'bank', montant = 12500 }, items = { { nom = 'repairkit', quantite = 2, label = 'Kit de réparation' }, { nom = 'lockpick', quantite = 2, label = 'Crochet' } }, gros = true }, -- jour 14
+    { argent = { compte = 'bank', montant = 4800 }, items = { { nom = 'bandage', quantite = 3, label = 'Bandage' } } }, -- jour 15
+    { argent = { compte = 'bank', montant = 5000 } }, -- jour 16
+    { argent = { compte = 'bank', montant = 5200 } }, -- jour 17
+    { argent = { compte = 'bank', montant = 5400 }, items = { { nom = 'sandwich', quantite = 3, label = 'Sandwich' } } }, -- jour 18
+    { argent = { compte = 'bank', montant = 5600 } }, -- jour 19
+    { argent = { compte = 'bank', montant = 5800 } }, -- jour 20
+    { argent = { compte = 'bank', montant = 15000 }, items = { { nom = 'advancedrepairkit', quantite = 1, label = 'Kit de réparation avancé' }, { nom = 'lockpick', quantite = 3, label = 'Crochet' } }, gros = true }, -- jour 21
+    { argent = { compte = 'bank', montant = 6200 } }, -- jour 22
+    { argent = { compte = 'bank', montant = 6400 } }, -- jour 23
+    { argent = { compte = 'bank', montant = 6600 }, items = { { nom = 'bandage', quantite = 3, label = 'Bandage' } } }, -- jour 24
+    { argent = { compte = 'bank', montant = 6800 } }, -- jour 25
+    { argent = { compte = 'bank', montant = 7000 } }, -- jour 26
+    { argent = { compte = 'bank', montant = 7200 }, items = { { nom = 'sandwich', quantite = 3, label = 'Sandwich' } } }, -- jour 27
+    { argent = { compte = 'bank', montant = 20000 }, items = { { nom = 'advancedrepairkit', quantite = 2, label = 'Kit de réparation avancé' }, { nom = 'phone', quantite = 1, label = 'Téléphone' } }, gros = true }, -- jour 28
+    { argent = { compte = 'bank', montant = 7600 } }, -- jour 29
+    { argent = { compte = 'bank', montant = 7800 }, items = { { nom = 'water_bottle', quantite = 3, label = "Bouteille d'eau" } } }, -- jour 30
+    { argent = { compte = 'bank', montant = 30000 }, items = { { nom = 'advancedrepairkit', quantite = 3, label = 'Kit de réparation avancé' }, { nom = 'lockpick', quantite = 5, label = 'Crochet' } }, gros = true }, -- jour 31
 }
 
 -- Plafond de sécurité : aucun montant au-delà ne sera versé (protège d'une faute de frappe)

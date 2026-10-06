@@ -58,7 +58,7 @@
 
             const titre = document.createElement('span');
             titre.className = 'vip-num';
-            titre.textContent = `Jour ${numero}`;
+            titre.textContent = lot.gros ? `Jour ${numero} ★` : `Jour ${numero}`;
             carte.appendChild(titre);
 
             (lot.lignes || []).forEach((ligne) => {
@@ -69,6 +69,10 @@
             });
             conteneur.appendChild(carte);
         });
+
+        // 31 cases : on fait défiler jusqu'au jour en cours
+        const courant = conteneur.querySelector('.vip-jour.courant');
+        if (courant) requestAnimationFrame(() => courant.scrollIntoView({ block: 'center' }));
     }
 
     function appliquer(etat) {
@@ -86,7 +90,7 @@
             texte('statut', 'Réservé aux VIP');
             texte('sous-statut', 'Obtenez le grade VIP pour débloquer les récompenses.');
         } else if (etat.disponible) {
-            texte('statut', `Jour ${etat.jourCycle} disponible`);
+            texte('statut', `Jour ${etat.jourCycle} / ${(etat.recompenses || []).length} disponible`);
             texte('sous-statut', 'Votre récompense vous attend.');
         } else {
             texte('statut', 'Déjà récupérée aujourd\'hui');
