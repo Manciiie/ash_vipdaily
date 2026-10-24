@@ -26,20 +26,24 @@ Config.DelaiActions = 1500
 -- Le VIP est reconnu si AU MOINS UNE des méthodes activées répond oui.
 
 Config.Vip = {
-    -- 1) Rôle Discord (lu directement via l'API Discord, sans dépendre d'une autre ressource)
+    -- 1) ash_newplayers (recommandé) : c'est lui qui lit le rôle VIP Discord pour tout le serveur
+    --    (convars wan_discord_*), avec son propre cache. Mettre '' pour ne pas l'utiliser.
+    Ressource = 'ash_newplayers',
+
+    -- 2) Rôle Discord lu directement par ash_vipdaily (seulement si ash_newplayers n'est pas utilisé)
     --    Le token du bot NE VA PAS ici : mettez-le dans server.cfg (jamais envoyé aux clients) :
     --        set ash_vipdaily_bot_token "VOTRE_TOKEN_BOT"
     Discord = {
-        Actif = true,
+        Actif = false,                             -- doublon d'ash_newplayers : à activer seulement sans lui
         ServeurId = '000000000000000000',          -- ID du serveur Discord (guild)
         Roles = { '000000000000000000' },          -- ID du/des rôle(s) VIP
     },
 
-    -- 2) Permission ace (pratique pour les tests ou un VIP donné à la main)
+    -- 3) Permission ace (pratique pour les tests ou un VIP donné à la main)
     --        add_ace identifier.license:xxxx ash.vip allow
     Ace = 'ash.vip',
 
-    -- 3) Vérification personnalisée (optionnelle) : brancher ici une autre ressource
+    -- 4) Vérification personnalisée (optionnelle) : brancher ici une autre ressource
     --    Exemple : Personnalisee = function(source) return exports['ma_ressource']:EstVip(source) end
     Personnalisee = nil,
 

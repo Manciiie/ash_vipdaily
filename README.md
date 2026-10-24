@@ -7,13 +7,13 @@ Cycle de 31 jours : récupérer chaque jour fait avancer la série. Paliers aux 
 
 1. Déposer le dossier `ash_vipdaily` dans `resources/`.
 2. Renommer `html/app.js.txt` en `html/app.js` (renommé pour l'antivirus).
-3. Dans `server.cfg`, après le framework, ox_lib et oxmysql :
+3. Dans `server.cfg`, après le framework, ox_lib, oxmysql et `ash_newplayers` :
    ```
-   set ash_vipdaily_bot_token "TOKEN_DU_BOT_DISCORD"
    set ash_vipdaily_webhook "https://discord.com/api/webhooks/..."   # optionnel
    ensure ash_vipdaily
    ```
-4. Dans `config.lua` : `Config.Vip.Discord.ServeurId`, `Config.Vip.Discord.Roles` (ID du rôle VIP) et `Config.Recompenses`.
+4. Dans `config.lua` : `Config.Recompenses`. Le rôle VIP Discord est lu par `ash_newplayers` (`Config.Vip.Ressource`),
+   avec ses convars `wan_discord_*` : rien à régler ici.
 
 La table `ash_vipdaily_joueurs` se crée toute seule (`install.sql` est fourni en option).
 
@@ -25,11 +25,14 @@ La table `ash_vipdaily_joueurs` se crée toute seule (`install.sql` est fourni e
 ## Détection du VIP
 
 Un joueur est VIP si une des méthodes répond oui :
-- **Rôle Discord** lu via l'API Discord (le bot doit être sur le serveur Discord ; le joueur doit avoir Discord ouvert pour que FiveM transmette son ID).
+- **ash_newplayers** (par défaut, `Config.Vip.Ressource`) : même rôle Discord que les badges VIP du staff et le salaire VIP
+  de Buty-InfiniteJobs. ash_newplayers garde le rôle en cache 5 min ; il est relu sans cache au moment de récupérer.
+- **Rôle Discord lu directement** (`Config.Vip.Discord.Actif = true` et convar `ash_vipdaily_bot_token`), seulement
+  sans ash_newplayers. Le bot doit être sur le serveur Discord ; le joueur doit avoir Discord ouvert.
 - **Permission ace** `ash.vip` (tests, VIP manuel) : `add_ace identifier.license:xxxx ash.vip allow`.
 - **Fonction personnalisée** `Config.Vip.Personnalisee` pour brancher une autre ressource.
 
-Statut mis en cache 10 min pour l'affichage, revérifié sans cache au moment de récupérer.
+Hors ash_newplayers : statut mis en cache 10 min pour l'affichage, revérifié sans cache au moment de récupérer.
 
 ## Sécurité
 

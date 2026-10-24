@@ -103,16 +103,46 @@ local function roleDiscordVip(source)
     return Citizen.Await(p)
 end
 
+--- ASH City : statut VIP fourni par ash_newplayers (rôle Discord lu et mis en cache par lui).
+--- Renvoie true / false, ou nil si la ressource n'est pas utilisable (on passe alors aux autres méthodes).
+--- forcer = true (au moment de récupérer) : relecture immédiate du rôle Discord.
+local avertiRessourceVip = false
+local function vipParRessource(source, forcer)
+    local ressource = Config.Vip.Ressource
+    if not ressource or ressource == '' or GetResourceState(ressource) ~= 'started' then return nil end
+
+    local ok, statut = pcall(function()
+        if forcer then return exports[ressource]:RefreshVip(source) end
+        return exports[ressource]:GetVipStatus(source)
+    end)
+    if not ok then
+        if not avertiRessourceVip then
+            avertiRessourceVip = true
+            print(('^3[ash_vipdaily] %s : lecture du statut VIP impossible (%s), autres méthodes utilisées^0'):format(ressource, tostring(statut)))
+        end
+        return nil
+    end
+    return statut ~= nil
+end
+
 local function estVip(source, forcer)
+    if Config.Vip.Ace and IsPlayerAceAllowed(source, Config.Vip.Ace) then
+        return true
+    end
+
+    -- ash_newplayers a son propre cache : pas de double mise en cache ici
+    local parRessource = vipParRessource(source, forcer)
+    if parRessource ~= nil then
+        return parRessource
+    end
+
     local cache = cacheVip[source]
     if not forcer and cache and cache.expire > os.time() then
         return cache.vip
     end
 
     local vip = false
-    if Config.Vip.Ace and IsPlayerAceAllowed(source, Config.Vip.Ace) then
-        vip = true
-    elseif type(Config.Vip.Personnalisee) == 'function' then
+    if type(Config.Vip.Personnalisee) == 'function' then
         local ok, resultat = pcall(Config.Vip.Personnalisee, source)
         vip = ok and resultat == true
     end
