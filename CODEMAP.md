@@ -3,11 +3,11 @@
 > Généré par `codemap.py` v2 : **ne pas modifier à la main**. Régénérer après chaque modification du code.
 > Format : `nom` suivi du numéro de ligne → lire seulement les lignes utiles (Read avec offset).
 
-**11 fichiers · 1371 lignes** · 8 lua · 1 sql · 1 js · 1 html
+**11 fichiers · 1429 lignes** · 8 lua · 1 sql · 1 js · 1 html
 
 ## Ressources FiveM
 
-- **vip_gh** (fx cerulean, v 1.3.1, lua54 yes)
+- **vip_gh** (fx cerulean, v 1.3.2, lua54 yes)
   - partagé : `@ox_lib/init.lua`, `config.lua`, `locales/fr.lua`, `bridge/shared.lua`
   - client : `bridge/client.lua`, `client/main.lua`
   - serveur : `@oxmysql/lib/MySQL.lua`, `bridge/server.lua`, `server/main.lua`
@@ -16,9 +16,9 @@
 
 ## Liens entre fichiers
 
-- callback `ash_vipdaily:server:action` : déclaré `server/main.lua:411` ← appelé `client/main.lua:36`
-- callback `ash_vipdaily:server:ouvrir` : déclaré `server/main.lua:390` ← appelé `client/main.lua:12`
-- callback `ash_vipdaily:server:rappel` : déclaré `server/main.lua:402` ← appelé `client/main.lua:60`
+- callback `ash_vipdaily:server:action` : déclaré `server/main.lua:469` ← appelé `client/main.lua:36`
+- callback `ash_vipdaily:server:ouvrir` : déclaré `server/main.lua:448` ← appelé `client/main.lua:12`
+- callback `ash_vipdaily:server:rappel` : déclaré `server/main.lua:460` ← appelé `client/main.lua:60`
 - NUI `action` : JS `html/app.js:248` → Lua `client/main.lua:34`
 - NUI `fermer` : JS `html/app.js:231` → Lua `client/main.lua:29`
 - NUI action `fermer` : Lua `client/main.lua:24` → JS `html/app.js:226`
@@ -71,11 +71,11 @@
 ### locales/fr.lua — partagé · 33 l.
 - fonctions : `_L(cle, ...)` 26
 
-### server/main.lua — serveur · 505 l.
+### server/main.lua — serveur · 563 l.
 - framework : ox_lib, Bridge
-- écoute (events) : `playerDropped` 500
+- écoute (events) : `playerDropped` 558
 - émet → client : `ox_lib:notify` 23
-- callbacks déclarés : `ash_vipdaily:server:ouvrir` 390, `ash_vipdaily:server:rappel` 402, `ash_vipdaily:server:action` 411
-- fonctions : `debug(...)` 14, `avertir(message)` 18, `notifier(source, message, typeNotif)` 22, `estStaff(source)` 30, `autorise(source)` 35, `pasTropRapide(source, historique, delai, prevenir)` 45, `logDiscord(titre, description, couleur)` 56, `verifierConfig()` 76, `cleCompte(source)` 114, `idDiscord(source)` 121, `roleDiscordVip(source)` 127, `terminer(vip, erreur)` 140, `vipParRessource(source, forcer)` 175, `estVip(source, forcer)` 201, `jour(decalageJours)` 240, `secondesAvantReinit()` 245, `indexRecompense(serie)` 251, `listeRecompenses()` 258, `ligneJoueur(cle, anciennecle)` 297, `serieSuivante(ligne)` 311, `etat(source, joueur, cle)` 317, `donnerRecompense(source, recompense)` 346, `finir(resultat)` 427
-- tables SQL : `IGNORE` 300, `ash_vipdaily_joueurs` 462, `ash_vipdaily_joueurs` 476
+- callbacks déclarés : `ash_vipdaily:server:ouvrir` 448, `ash_vipdaily:server:rappel` 460, `ash_vipdaily:server:action` 469
+- fonctions : `debug(...)` 14, `avertir(message)` 18, `notifier(source, message, typeNotif)` 22, `estStaff(source)` 30, `autorise(source)` 35, `pasTropRapide(source, historique, delai, prevenir)` 45, `logDiscord(titre, description, couleur)` 56, `verifierConfig()` 76, `cleCompte(source)` 114, `idDiscord(source)` 121, `roleDiscordVip(source)` 127, `terminer(vip, erreur)` 140, `vipParRessource(source, forcer)` 175, `estVip(source, forcer)` 201, `jour(decalageJours)` 240, `secondesAvantReinit()` 245, `indexRecompense(serie)` 251, `listeRecompenses()` 258, `personnagesDuCompte(source, personnageActuel)` 296, `ajouter(id)` 298, `ligneJoueur(source, cle, personnageActuel)` 340, `serieSuivante(ligne)` 369, `etat(source, joueur, cle)` 375, `donnerRecompense(source, recompense)` 404, `finir(resultat)` 485
+- tables SQL : `ash_vipdaily_joueurs` 356, `ash_vipdaily_joueurs` 520, `ash_vipdaily_joueurs` 534
 - threads : 1 (l. 280)

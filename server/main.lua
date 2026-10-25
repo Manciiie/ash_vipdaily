@@ -292,15 +292,73 @@ end)
 
 local REQUETE_LIGNE = 'SELECT dernier_jour, serie, total FROM `ash_vipdaily_joueurs` WHERE identifiant = ?'
 
+--- Identifiants de tous les personnages du compte (lignes enregistrées avant la v1.3.1)
+local function personnagesDuCompte(source, personnageActuel)
+    local liste, vus = {}, {}
+    local function ajouter(id)
+        if id and id ~= '' and not vus[id] then
+            vus[id] = true
+            liste[#liste + 1] = id
+        end
+    end
+    ajouter(personnageActuel)
+
+    local licences = {}
+    for _, typeId in ipairs({ 'license', 'license2' }) do
+        local id = GetPlayerIdentifierByType(source, typeId)
+        if id then licences[#licences + 1] = id end
+    end
+    if #licences == 0 then return liste end
+
+    local ok, lignes = pcall(function()
+        if Bridge.Framework == 'esx' then
+            -- ESX : identifier = empreinte de la licence, ou charN:empreinte en multipersonnage
+            local conditions, parametres = {}, {}
+            for _, licence in ipairs(licences) do
+                local empreinte = licence:gsub('^license%d?:', '')
+                conditions[#conditions + 1] = 'identifier = ? OR identifier LIKE ?'
+                parametres[#parametres + 1] = empreinte
+                parametres[#parametres + 1] = '%:' .. empreinte
+            end
+            return MySQL.query.await(('SELECT identifier AS id FROM `users` WHERE %s'):format(table.concat(conditions, ' OR ')), parametres)
+        end
+        local trous = ('?,'):rep(#licences):sub(1, -2)
+        return MySQL.query.await(('SELECT citizenid AS id FROM `players` WHERE license IN (%s)'):format(trous), licences)
+    end)
+    if not ok then
+        avertir(('reprise des anciennes séries : personnages introuvables (%s), seul le personnage connecté est repris'):format(tostring(lignes)))
+        return liste
+    end
+    for _, l in ipairs(lignes or {}) do ajouter(l.id) end
+    return liste
+end
+
 --- Ligne du compte. Avant la v1.3.1 les lignes étaient enregistrées par personnage :
---- la première fois, la ligne du personnage connecté devient celle du compte (la série est gardée).
-local function ligneJoueur(cle, anciennecle)
+--- la première fois, les lignes de tous les personnages du compte sont fusionnées
+--- (dernière récupération et série du plus récent, totaux additionnés), ce qui empêche
+--- de récupérer une deuxième fois le jour de la mise à jour avec un autre personnage.
+local function ligneJoueur(source, cle, personnageActuel)
     local ligne = MySQL.single.await(REQUETE_LIGNE, { cle })
-    if not ligne and anciennecle and anciennecle ~= cle then
-        local reprise = MySQL.update.await(
-            'UPDATE IGNORE `ash_vipdaily_joueurs` SET identifiant = ? WHERE identifiant = ?', { cle, anciennecle })
-        if reprise == 1 then
-            debug(('ligne %s reprise pour le compte %s'):format(anciennecle, cle))
+    if ligne then return ligne end
+
+    local anciens = personnagesDuCompte(source, personnageActuel)
+    if #anciens > 0 then
+        local trous = ('?,'):rep(#anciens):sub(1, -2)
+        local lignes = MySQL.query.await(
+            ('SELECT identifiant, dernier_jour, serie, total FROM `ash_vipdaily_joueurs` WHERE identifiant IN (%s)'):format(trous),
+            anciens) or {}
+        if #lignes > 0 then
+            local recente, total = nil, 0
+            for _, l in ipairs(lignes) do
+                total = total + (l.total or 0)
+                if not recente or (l.dernier_jour or '') > (recente.dernier_jour or '') then recente = l end
+            end
+            MySQL.insert.await(
+                'INSERT IGNORE INTO `ash_vipdaily_joueurs` (identifiant, dernier_jour, serie, total) VALUES (?, ?, ?, ?)',
+                { cle, recente.dernier_jour, recente.serie or 0, total })
+            MySQL.update.await(
+                ('DELETE FROM `ash_vipdaily_joueurs` WHERE identifiant IN (%s)'):format(trous), anciens)
+            debug(('%d ligne(s) de personnage fusionnée(s) pour le compte %s'):format(#lignes, cle))
             ligne = MySQL.single.await(REQUETE_LIGNE, { cle })
         end
     end
@@ -316,7 +374,7 @@ end
 --- État complet envoyé à l'interface
 local function etat(source, joueur, cle)
     local vip = estVip(source) == true
-    local ligne = ligneJoueur(cle, joueur.identifiant)
+    local ligne = ligneJoueur(source, cle, joueur.identifiant)
     local disponible = vip and ligne.dernier_jour ~= jour(0)
 
     -- Jour mis en avant : celui à récupérer, sinon celui de demain
@@ -405,7 +463,7 @@ lib.callback.register('ash_vipdaily:server:rappel', function(source)
     local joueur = Bridge.GetPlayer(source)
     local cle = cleCompte(source)
     if not joueur or not cle or estVip(source) ~= true then return false end
-    return ligneJoueur(cle, joueur.identifiant).dernier_jour ~= jour(0)
+    return ligneJoueur(source, cle, joueur.identifiant).dernier_jour ~= jour(0)
 end)
 
 lib.callback.register('ash_vipdaily:server:action', function(source, data)
@@ -449,7 +507,7 @@ lib.callback.register('ash_vipdaily:server:action', function(source, data)
     end
 
     local aujourdhui = jour(0)
-    local ligne = ligneJoueur(cle, joueur.identifiant)
+    local ligne = ligneJoueur(source, cle, joueur.identifiant)
     if ligne.dernier_jour == aujourdhui then
         notifier(source, _L('deja_recupere'), 'warning')
         return finir(false)
