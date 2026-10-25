@@ -303,27 +303,22 @@ local function personnagesDuCompte(source, personnageActuel)
     end
     ajouter(personnageActuel)
 
-    local licences = {}
-    for _, typeId in ipairs({ 'license', 'license2' }) do
-        local id = GetPlayerIdentifierByType(source, typeId)
-        if id then licences[#licences + 1] = id end
-    end
-    if #licences == 0 then return liste end
+    -- Les deux licences (license et license2) : une seule si le joueur n'en a qu'une
+    local licence1 = GetPlayerIdentifierByType(source, 'license')
+    local licence2 = GetPlayerIdentifierByType(source, 'license2') or licence1
+    licence1 = licence1 or licence2
+    if not licence1 then return liste end
 
     local ok, lignes = pcall(function()
         if Bridge.Framework == 'esx' then
             -- ESX : identifier = empreinte de la licence, ou charN:empreinte en multipersonnage
-            local conditions, parametres = {}, {}
-            for _, licence in ipairs(licences) do
-                local empreinte = licence:gsub('^license%d?:', '')
-                conditions[#conditions + 1] = 'identifier = ? OR identifier LIKE ?'
-                parametres[#parametres + 1] = empreinte
-                parametres[#parametres + 1] = '%:' .. empreinte
-            end
-            return MySQL.query.await(('SELECT identifier AS id FROM `users` WHERE %s'):format(table.concat(conditions, ' OR ')), parametres)
+            local empreinte1 = licence1:gsub('^license%d?:', '')
+            local empreinte2 = licence2:gsub('^license%d?:', '')
+            return MySQL.query.await(
+                'SELECT identifier AS id FROM `users` WHERE identifier = ? OR identifier LIKE ? OR identifier = ? OR identifier LIKE ?',
+                { empreinte1, '%:' .. empreinte1, empreinte2, '%:' .. empreinte2 })
         end
-        local trous = ('?,'):rep(#licences):sub(1, -2)
-        return MySQL.query.await(('SELECT citizenid AS id FROM `players` WHERE license IN (%s)'):format(trous), licences)
+        return MySQL.query.await('SELECT citizenid AS id FROM `players` WHERE license = ? OR license = ?', { licence1, licence2 })
     end)
     if not ok then
         avertir(('reprise des anciennes séries : personnages introuvables (%s), seul le personnage connecté est repris'):format(tostring(lignes)))
@@ -343,10 +338,12 @@ local function ligneJoueur(source, cle, personnageActuel)
 
     local anciens = personnagesDuCompte(source, personnageActuel)
     if #anciens > 0 then
-        local trous = ('?,'):rep(#anciens):sub(1, -2)
-        local lignes = MySQL.query.await(
-            ('SELECT identifiant, dernier_jour, serie, total FROM `ash_vipdaily_joueurs` WHERE identifiant IN (%s)'):format(trous),
-            anciens) or {}
+        -- Une requête par personnage (quelques-uns au plus, une seule fois par compte)
+        local lignes = {}
+        for _, id in ipairs(anciens) do
+            local l = MySQL.single.await(REQUETE_LIGNE, { id })
+            if l then lignes[#lignes + 1] = l end
+        end
         if #lignes > 0 then
             local recente, total = nil, 0
             for _, l in ipairs(lignes) do
@@ -356,8 +353,9 @@ local function ligneJoueur(source, cle, personnageActuel)
             MySQL.insert.await(
                 'INSERT IGNORE INTO `ash_vipdaily_joueurs` (identifiant, dernier_jour, serie, total) VALUES (?, ?, ?, ?)',
                 { cle, recente.dernier_jour, recente.serie or 0, total })
-            MySQL.update.await(
-                ('DELETE FROM `ash_vipdaily_joueurs` WHERE identifiant IN (%s)'):format(trous), anciens)
+            for _, id in ipairs(anciens) do
+                MySQL.update.await('DELETE FROM `ash_vipdaily_joueurs` WHERE identifiant = ?', { id })
+            end
             debug(('%d ligne(s) de personnage fusionnée(s) pour le compte %s'):format(#lignes, cle))
             ligne = MySQL.single.await(REQUETE_LIGNE, { cle })
         end
