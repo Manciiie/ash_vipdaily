@@ -7,7 +7,7 @@
 
 ## Ressources FiveM
 
-- **vip_gh** (fx cerulean, v 1.4.1, lua54 yes)
+- **vip_gh** (fx cerulean, v 1.4.2, lua54 yes)
   - partagé : `@ox_lib/init.lua`, `config.lua`, `locales/fr.lua`, `bridge/shared.lua`
   - client : `bridge/client.lua`, `client/main.lua`
   - serveur : `@oxmysql/lib/MySQL.lua`, `bridge/server.lua`, `server/main.lua`

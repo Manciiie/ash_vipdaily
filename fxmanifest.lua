@@ -5,7 +5,7 @@ lua54 'yes'
 name 'ash_vipdaily'
 author 'ASH City'
 description 'Récompenses VIP — ASH City'
-version '1.4.1'
+version '1.4.2'
 
 shared_scripts {
     '@ox_lib/init.lua',
