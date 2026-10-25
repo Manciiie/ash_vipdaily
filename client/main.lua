@@ -146,6 +146,15 @@ if pnj.Actif then
     })
 end
 
+-- Export : place un point GPS sur le PNJ (utilisé par le bouton du menu pause ash_pausemenu)
+-- Renvoie false si le PNJ est désactivé (l'appelant peut alors ouvrir le panneau autrement).
+exports('GuiderVersPnj', function()
+    if not pnj.Actif then return false end
+    SetNewWaypoint(pnj.Coords.x, pnj.Coords.y)
+    lib.notify({ title = _L('titre'), description = _L('gps_pnj'), type = 'inform' })
+    return true
+end)
+
 -- Sécurité : on rend la main au joueur si la ressource s'arrête NUI ouverte
 AddEventHandler('onResourceStop', function(ressource)
     if ressource ~= GetCurrentResourceName() then return end

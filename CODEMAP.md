@@ -3,11 +3,11 @@
 > Généré par `codemap.py` v2 : **ne pas modifier à la main**. Régénérer après chaque modification du code.
 > Format : `nom` suivi du numéro de ligne → lire seulement les lignes utiles (Read avec offset).
 
-**11 fichiers · 1587 lignes** · 8 lua · 1 sql · 1 js · 1 html
+**11 fichiers · 1597 lignes** · 8 lua · 1 sql · 1 js · 1 html
 
 ## Ressources FiveM
 
-- **vip_gh** (fx cerulean, v 1.4.0, lua54 yes)
+- **vip_gh** (fx cerulean, v 1.4.1, lua54 yes)
   - partagé : `@ox_lib/init.lua`, `config.lua`, `locales/fr.lua`, `bridge/shared.lua`
   - client : `bridge/client.lua`, `client/main.lua`
   - serveur : `@oxmysql/lib/MySQL.lua`, `bridge/server.lua`, `server/main.lua`
@@ -18,7 +18,7 @@
 
 - callback `ash_vipdaily:server:action` : déclaré `server/main.lua:491` ← appelé `client/main.lua:37`
 - callback `ash_vipdaily:server:ouvrir` : déclaré `server/main.lua:470` ← appelé `client/main.lua:13`
-- callback `ash_vipdaily:server:rappel` : déclaré `server/main.lua:482` ← appelé `client/main.lua:163`
+- callback `ash_vipdaily:server:rappel` : déclaré `server/main.lua:482` ← appelé `client/main.lua:172`
 - NUI `action` : JS `html/app.js:248` → Lua `client/main.lua:35`
 - NUI `fermer` : JS `html/app.js:231` → Lua `client/main.lua:30`
 - NUI action `fermer` : Lua `client/main.lua:25` → JS `html/app.js:226`
@@ -50,12 +50,13 @@
 - framework : Qbox, Bridge
 - fonctions : `demarree(ressource)` 6, `detecter()` 11
 
-### client/main.lua — client · 167 l.
+### client/main.lua — client · 176 l.
 - framework : ox_lib, Bridge
-- écoute (events) : `onResourceStop` 150
-- callbacks appelés : `ash_vipdaily:server:ouvrir` 13, `ash_vipdaily:server:action` 37, `ash_vipdaily:server:rappel` 163
+- écoute (events) : `onResourceStop` 159
+- callbacks appelés : `ash_vipdaily:server:ouvrir` 13, `ash_vipdaily:server:action` 37, `ash_vipdaily:server:rappel` 172
 - NUI : callbacks reçus : `fermer` 30, `action` 35
 - NUI : messages envoyés : `ouvrir` 18, `fermer` 25
+- exports fournis : `GuiderVersPnj` 151
 - exports utilisés : `ox_target:removeLocalEntity` 60, `ox_target:addLocalEntity` 87
 - fonctions : `ouvrir()` 9, `fermer()` 21, `supprimerPed()` 57, `creerPed()` 67, `cacherTexte()` 98, `nearby()` 131, `onExit()` 142
 
@@ -69,8 +70,8 @@
 - scripts : `app.js`
 - styles : `style.css`
 
-### locales/fr.lua — partagé · 36 l.
-- fonctions : `_L(cle, ...)` 29
+### locales/fr.lua — partagé · 37 l.
+- fonctions : `_L(cle, ...)` 30
 
 ### server/main.lua — serveur · 593 l.
 - framework : ox_lib, Bridge

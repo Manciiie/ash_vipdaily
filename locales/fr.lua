@@ -18,6 +18,7 @@ Locales['fr'] = {
     rappel         = 'Votre récompense VIP du jour vous attend auprès du PNJ « Récompenses VIP » (point sur la carte).',
     trop_loin      = 'Rendez-vous auprès du PNJ « Récompenses VIP » pour récupérer votre récompense.',
     pnj_interagir  = 'Récompenses VIP',
+    gps_pnj        = 'Point GPS placé sur le PNJ « Récompenses VIP ».',
     pnj_touche     = '[E] Récompenses VIP',
     log_titre      = 'Récompense VIP récupérée',
     liquide        = 'Liquide',
