@@ -452,6 +452,19 @@ local function donnerRecompense(source, recompense)
     return true, donnes, manques
 end
 
+-- PNJ -------------------------------------------------------------------------------
+
+--- La récompense ne se récupère qu'auprès du PNJ : position lue par le serveur, jamais envoyée par le client
+local MARGE_PNJ = 2.0   -- tolérance (décalage de synchronisation de la position)
+local function presDuPnj(source)
+    local pnj = Config.Pnj
+    if not pnj or not pnj.Actif then return true end
+    local ped = GetPlayerPed(source)
+    if not ped or ped == 0 then return false end
+    local c = pnj.Coords
+    return #(GetEntityCoords(ped) - vec3(c.x, c.y, c.z)) <= (pnj.Distance or 2.5) + MARGE_PNJ
+end
+
 -- Callbacks -------------------------------------------------------------------------
 
 lib.callback.register('ash_vipdaily:server:ouvrir', function(source)
@@ -486,6 +499,10 @@ lib.callback.register('ash_vipdaily:server:action', function(source, data)
     end
     if not configValide then
         notifier(source, _L('action_erreur'), 'error')
+        return false
+    end
+    if not presDuPnj(source) then
+        notifier(source, _L('trop_loin'), 'error')
         return false
     end
     if verrou[source] then return false end

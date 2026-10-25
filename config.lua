@@ -9,9 +9,31 @@ Config.Debug = false
 -- Framework : 'auto' (détection), 'qbcore', 'qbox' ou 'esx'
 Config.Framework = 'auto'
 
--- Ouverture
-Config.Commande = 'recompenses'
-Config.Touche = ''            -- touche par défaut, '' pour aucune (modifiable par chaque joueur dans Paramètres > Raccourcis)
+-- Ouverture : la récompense se récupère auprès du PNJ (Config.Pnj).
+-- Commande désactivée par défaut. Si vous en mettez une, elle ouvre le panneau pour consulter,
+-- mais la récupération reste refusée loin du PNJ (vérifié par le serveur).
+Config.Commande = ''
+Config.Touche = ''            -- touche de la commande, '' pour aucune (ignorée sans commande)
+
+-------------------------------------------------------------------------------------
+-- PNJ des récompenses
+-------------------------------------------------------------------------------------
+Config.Pnj = {
+    Actif = true,                                  -- false : plus de PNJ ni de contrôle de distance
+    Modele = 'a_f_y_business_01',
+    Coords = vec4(195.17, -933.77, 30.69, 144.5),  -- x, y, z (hauteur du joueur debout), orientation : Legion Square, à adapter
+    Scenario = 'WORLD_HUMAN_CLIPBOARD',            -- animation du PNJ, '' pour aucune
+    Distance = 2.5,                                -- distance d'interaction (m)
+    DistanceApparition = 60.0,                     -- le PNJ n'existe que pour les joueurs à moins de cette distance
+    -- Interaction : ox_target s'il est démarré, sinon touche E (texte à l'écran)
+    Blip = {
+        Actif = true,
+        Sprite = 617,                              -- icône : https://docs.fivem.net/docs/game-references/blips/
+        Couleur = 27,
+        Taille = 0.8,
+        Nom = 'Récompenses VIP',
+    },
+}
 
 -- Permissions (le panneau reste ouvert à tous : un non-VIP voit qu'il doit être VIP)
 Config.StaffSeulement = false

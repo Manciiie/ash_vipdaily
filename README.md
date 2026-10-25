@@ -19,8 +19,12 @@ La table `ash_vipdaily_joueurs` se crée toute seule (`install.sql` est fourni e
 
 ## Utilisation
 
-- `/recompenses` : ouvre le panneau (aucune touche par défaut, `Config.Touche` pour en mettre une).
+- La récompense se récupère **auprès du PNJ « Récompenses VIP »** (`Config.Pnj` : modèle, position, animation, blip).
+  Interaction avec ox_target s'il est démarré, sinon touche **E**. Le serveur refuse la récupération loin du PNJ.
+- Aucune commande par défaut. `Config.Commande` permet d'en remettre une pour consulter le panneau à distance
+  (la récupération reste réservée au PNJ).
 - Rappel automatique à la connexion quand une récompense attend un VIP.
+- Le PNJ n'est créé que pour les joueurs à moins de `Config.Pnj.DistanceApparition` (60 m) : 0.00 ms ailleurs.
 
 ## Détection du VIP
 
