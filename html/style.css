@@ -41,13 +41,21 @@ html, body {
     opacity: 0;
     transform: translate(-50%, -48%) scale(0.98);
     pointer-events: none;
-    transition: opacity 0.18s ease, transform 0.18s ease;
+    /* Panneau fermé : retiré de l'affichage une fois le fondu terminé (plus rien à dessiner) */
+    visibility: hidden;
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
 }
+
+/* Fermé : aucune animation ne tourne en arrière-plan */
+.ash-panneau:not(.visible) *,
+.ash-panneau:not(.visible) *::after { animation: none !important; }
 
 .ash-panneau.visible {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
     pointer-events: auto;
+    visibility: visible;
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s;
 }
 
 /* En-tête ------------------------------------------------------------------ */
@@ -287,7 +295,7 @@ kbd {
 .vip-palier-suivant b { color: var(--ash-vert); font-weight: 600; }
 
 .vip-recuperer { width: 100%; padding: 13px 16px; font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
-.vip-recuperer:not(:disabled) { animation: vip-pulse 2.2s ease-in-out infinite; }
+.ash-panneau.visible .vip-recuperer:not(:disabled) { animation: vip-pulse 2.2s ease-in-out infinite; }
 .vip-sous-bouton { font-size: 12px; color: var(--ash-texte-2); text-align: center; min-height: 15px; font-variant-numeric: tabular-nums; }
 
 @keyframes vip-pulse {

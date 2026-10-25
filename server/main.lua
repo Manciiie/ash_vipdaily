@@ -332,9 +332,13 @@ end
 --- la première fois, les lignes de tous les personnages du compte sont fusionnées
 --- (dernière récupération et série du plus récent, totaux additionnés), ce qui empêche
 --- de récupérer une deuxième fois le jour de la mise à jour avec un autre personnage.
+local fusionFaite = {}   -- [licence] = true : fusion déjà tentée depuis le démarrage, pas de nouvelle recherche
+
 local function ligneJoueur(source, cle, personnageActuel)
     local ligne = MySQL.single.await(REQUETE_LIGNE, { cle })
-    if ligne then return ligne end
+    if ligne or fusionFaite[cle] then
+        return ligne or { dernier_jour = nil, serie = 0, total = 0 }
+    end
 
     local anciens = personnagesDuCompte(source, personnageActuel)
     if #anciens > 0 then
@@ -360,6 +364,7 @@ local function ligneJoueur(source, cle, personnageActuel)
             ligne = MySQL.single.await(REQUETE_LIGNE, { cle })
         end
     end
+    fusionFaite[cle] = true
     return ligne or { dernier_jour = nil, serie = 0, total = 0 }
 end
 
@@ -370,9 +375,15 @@ local function serieSuivante(ligne)
 end
 
 --- État complet envoyé à l'interface
-local function etat(source, joueur, cle)
-    local vip = estVip(source) == true
-    local ligne = ligneJoueur(source, cle, joueur.identifiant)
+--- connu (optionnel) : { vip, ligne } déjà vérifiés par l'appelant, rien n'est relu
+local function etat(source, joueur, cle, connu)
+    local vip, ligne
+    if connu then
+        vip, ligne = connu.vip, connu.ligne
+    else
+        vip = estVip(source) == true
+        ligne = ligneJoueur(source, cle, joueur.identifiant)
+    end
     local disponible = vip and ligne.dernier_jour ~= jour(0)
 
     -- Jour mis en avant : celui à récupérer, sinon celui de demain
@@ -548,7 +559,11 @@ lib.callback.register('ash_vipdaily:server:action', function(source, data)
     ), #manques > 0 and 16753920 or 4054148)
 
     debug(('%s a récupéré le jour %d'):format(cle, serie))
-    return finir(etat(source, joueur, cle))
+    -- VIP vérifié sans cache et ligne écrite juste au-dessus : inutile de les relire
+    return finir(etat(source, joueur, cle, {
+        vip = true,
+        ligne = { dernier_jour = aujourdhui, serie = serie, total = (ligne.total or 0) + 1 },
+    }))
 end)
 
 -- Nettoyage ---------------------------------------------------------------------------
