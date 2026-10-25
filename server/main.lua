@@ -4,6 +4,7 @@
 
 -- Le joueur, l'argent et les items passent par Bridge (bridge/server.lua) : QBCore, Qbox et ESX.
 local dernierAppel = {}
+local derniereOuverture = {}
 local verrou = {}        -- empêche deux récupérations simultanées pour un même joueur
 local cacheVip = {}      -- [source] = { vip = bool, expire = os.time() }
 
@@ -12,6 +13,10 @@ local WEBHOOK = GetConvar('ash_vipdaily_webhook', '')
 
 local function debug(...)
     if Config.Debug then print('[ash_vipdaily]', ...) end
+end
+
+local function avertir(message)
+    print(('^3[ash_vipdaily] %s^0'):format(message))
 end
 
 local function notifier(source, message, typeNotif)
@@ -36,21 +41,25 @@ local function autorise(source)
     return true
 end
 
---- Anti-spam : une action par joueur toutes les Config.DelaiActions ms
-local function pasTropRapide(source)
+--- Anti-spam : une action par joueur toutes les `delai` ms
+local function pasTropRapide(source, historique, delai, prevenir)
     local maintenant = GetGameTimer()
-    local precedent = dernierAppel[source]
-    if precedent and maintenant - precedent < Config.DelaiActions then
-        notifier(source, _L('trop_rapide'), 'warning')
+    local precedent = historique[source]
+    if precedent and maintenant - precedent < delai then
+        if prevenir then notifier(source, _L('trop_rapide'), 'warning') end
         return false
     end
-    dernierAppel[source] = maintenant
+    historique[source] = maintenant
     return true
 end
 
 local function logDiscord(titre, description, couleur)
     if WEBHOOK == '' then return end
-    PerformHttpRequest(WEBHOOK, function() end, 'POST', json.encode({
+    PerformHttpRequest(WEBHOOK, function(code)
+        if code < 200 or code >= 300 then
+            avertir(('webhook Discord : envoi du log refusé (HTTP %s), vérifiez la convar ash_vipdaily_webhook'):format(code))
+        end
+    end, 'POST', json.encode({
         username = 'ASH City — VIP',
         embeds = { {
             title = titre,
@@ -62,7 +71,52 @@ local function logDiscord(titre, description, couleur)
     }), { ['Content-Type'] = 'application/json' })
 end
 
+-- Vérification de la config (une fois au démarrage) ---------------------------------
+
+local function verifierConfig()
+    local recompenses = Config.Recompenses
+    if type(recompenses) ~= 'table' or #recompenses == 0 then
+        print('^1[ash_vipdaily] Config.Recompenses est vide : aucune récompense ne peut être donnée.^0')
+        return false
+    end
+    for i, r in ipairs(recompenses) do
+        if r.argent then
+            local montant = tonumber(r.argent.montant)
+            if not montant or montant <= 0 then
+                avertir(('jour %d : montant invalide (%s)'):format(i, tostring(r.argent.montant)))
+            elseif montant > Config.MontantMax then
+                avertir(('jour %d : %d $ dépasse Config.MontantMax (%d $), l\'argent ne sera pas versé'):format(i, montant, Config.MontantMax))
+            end
+            if r.argent.compte ~= 'cash' and r.argent.compte ~= 'bank' then
+                avertir(('jour %d : compte « %s » inconnu, « bank » sera utilisé'):format(i, tostring(r.argent.compte)))
+            end
+        end
+        for _, item in ipairs(r.items or {}) do
+            if type(item.nom) ~= 'string' or item.nom == '' then
+                avertir(('jour %d : item sans nom, il sera ignoré'):format(i))
+            elseif (tonumber(item.quantite) or 0) < 1 then
+                avertir(('jour %d : quantité invalide pour %s, item ignoré'):format(i, item.nom))
+            end
+        end
+        if not r.argent and not r.items then
+            avertir(('jour %d : ni argent ni item'):format(i))
+        end
+    end
+    return true
+end
+
+local configValide = verifierConfig()
+
+-- Identifiant du compte -------------------------------------------------------------
+-- Le VIP vaut pour tout le compte : la récompense est liée à la licence Rockstar,
+-- jamais au personnage (sinon un VIP à plusieurs personnages la toucherait plusieurs fois).
+
+local function cleCompte(source)
+    return GetPlayerIdentifierByType(source, 'license') or GetPlayerIdentifierByType(source, 'license2')
+end
+
 -- Statut VIP ----------------------------------------------------------------------
+-- Chaque méthode renvoie vip (true / false) et, si la vérification a échoué, un message d'erreur.
 
 local function idDiscord(source)
     local id = GetPlayerIdentifierByType(source, 'discord')
@@ -82,45 +136,64 @@ local function roleDiscordVip(source)
     if not discord or not discord:match('^%d+$') then return false end
 
     local p = promise.new()
+    local fini = false
+    local function terminer(vip, erreur)
+        if fini then return end
+        fini = true
+        p:resolve({ vip, erreur })
+    end
+
+    -- Sans réponse de Discord, on n'attend pas indéfiniment (le verrou du joueur resterait pris)
+    SetTimeout(10000, function() terminer(false, 'Discord ne répond pas') end)
+
     PerformHttpRequest(
         ('https://discord.com/api/v10/guilds/%s/members/%s'):format(conf.ServeurId, discord),
         function(code, corps)
+            if code == 404 then return terminer(false) end -- pas membre du serveur Discord
             if code ~= 200 or not corps then
-                debug(('Discord a répondu %s pour %s'):format(code, discord))
-                return p:resolve(false)
+                return terminer(false, code == 429 and 'limite de requêtes Discord atteinte (429)' or ('HTTP %s'):format(code))
             end
-            local membre = json.decode(corps)
-            local roles = membre and membre.roles or {}
-            for _, role in ipairs(roles) do
+            local ok, membre = pcall(json.decode, corps)
+            if not ok or type(membre) ~= 'table' then return terminer(false, 'réponse Discord illisible') end
+            for _, role in ipairs(membre.roles or {}) do
                 for _, vip in ipairs(conf.Roles) do
-                    if role == vip then return p:resolve(true) end
+                    if role == vip then return terminer(true) end
                 end
             end
-            p:resolve(false)
+            terminer(false)
         end,
         'GET', '', { Authorization = 'Bot ' .. TOKEN_BOT }
     )
-    return Citizen.Await(p)
+    local resultat = Citizen.Await(p)
+    return resultat[1], resultat[2]
 end
 
 --- ASH City : statut VIP fourni par ash_newplayers (rôle Discord lu et mis en cache par lui).
---- Renvoie true / false, ou nil si la ressource n'est pas utilisable (on passe alors aux autres méthodes).
+--- Renvoie true / false (+ erreur), ou nil si la ressource n'est pas utilisable (on passe alors aux autres méthodes).
 --- forcer = true (au moment de récupérer) : relecture immédiate du rôle Discord.
 local avertiRessourceVip = false
 local function vipParRessource(source, forcer)
     local ressource = Config.Vip.Ressource
     if not ressource or ressource == '' or GetResourceState(ressource) ~= 'started' then return nil end
 
-    local ok, statut = pcall(function()
-        if forcer then return exports[ressource]:RefreshVip(source) end
+    local ok, statut, erreur = pcall(function()
+        if forcer then
+            local vip = exports[ressource]:RefreshVip(source)
+            if vip ~= nil then return vip end
+            -- RefreshVip ne donne pas la cause d'un refus : GetVipStatus la donne
+            -- (sans nouvel appel à Discord si le joueur n'est simplement pas VIP, réponse en cache)
+        end
         return exports[ressource]:GetVipStatus(source)
     end)
     if not ok then
         if not avertiRessourceVip then
             avertiRessourceVip = true
-            print(('^3[ash_vipdaily] %s : lecture du statut VIP impossible (%s), autres méthodes utilisées^0'):format(ressource, tostring(statut)))
+            avertir(('%s : lecture du statut VIP impossible (%s), autres méthodes utilisées'):format(ressource, tostring(statut)))
         end
         return nil
+    end
+    if statut == nil and erreur and erreur ~= 'Discord non lié' then
+        return false, erreur
     end
     return statut ~= nil
 end
@@ -131,9 +204,9 @@ local function estVip(source, forcer)
     end
 
     -- ash_newplayers a son propre cache : pas de double mise en cache ici
-    local parRessource = vipParRessource(source, forcer)
+    local parRessource, erreurRessource = vipParRessource(source, forcer)
     if parRessource ~= nil then
-        return parRessource
+        return parRessource, erreurRessource
     end
 
     local cache = cacheVip[source]
@@ -141,15 +214,22 @@ local function estVip(source, forcer)
         return cache.vip
     end
 
-    local vip = false
+    local vip, erreur = false, nil
     if type(Config.Vip.Personnalisee) == 'function' then
         local ok, resultat = pcall(Config.Vip.Personnalisee, source)
-        vip = ok and resultat == true
+        if ok then
+            vip = resultat == true
+        else
+            avertir(('Config.Vip.Personnalisee a échoué : %s'):format(tostring(resultat)))
+        end
     end
-    if not vip then vip = roleDiscordVip(source) end
+    if not vip then vip, erreur = roleDiscordVip(source) end
 
-    cacheVip[source] = { vip = vip, expire = os.time() + (Config.Vip.CacheMinutes or 10) * 60 }
-    return vip
+    -- Une erreur Discord n'est pas mise en cache : on réessaiera à la prochaine ouverture
+    if not erreur then
+        cacheVip[source] = { vip = vip, expire = os.time() + (Config.Vip.CacheMinutes or 10) * 60 }
+    end
+    return vip, erreur
 end
 
 -- Jours ---------------------------------------------------------------------------
@@ -210,11 +290,21 @@ CreateThread(function()
     ]])
 end)
 
-local function ligneJoueur(identifiant)
-    return MySQL.single.await(
-        'SELECT dernier_jour, serie, total FROM `ash_vipdaily_joueurs` WHERE identifiant = ?',
-        { identifiant }
-    ) or { dernier_jour = nil, serie = 0, total = 0 }
+local REQUETE_LIGNE = 'SELECT dernier_jour, serie, total FROM `ash_vipdaily_joueurs` WHERE identifiant = ?'
+
+--- Ligne du compte. Avant la v1.3.1 les lignes étaient enregistrées par personnage :
+--- la première fois, la ligne du personnage connecté devient celle du compte (la série est gardée).
+local function ligneJoueur(cle, anciennecle)
+    local ligne = MySQL.single.await(REQUETE_LIGNE, { cle })
+    if not ligne and anciennecle and anciennecle ~= cle then
+        local reprise = MySQL.update.await(
+            'UPDATE IGNORE `ash_vipdaily_joueurs` SET identifiant = ? WHERE identifiant = ?', { cle, anciennecle })
+        if reprise == 1 then
+            debug(('ligne %s reprise pour le compte %s'):format(anciennecle, cle))
+            ligne = MySQL.single.await(REQUETE_LIGNE, { cle })
+        end
+    end
+    return ligne or { dernier_jour = nil, serie = 0, total = 0 }
 end
 
 --- Série qu'aura le joueur s'il récupère aujourd'hui
@@ -224,9 +314,9 @@ local function serieSuivante(ligne)
 end
 
 --- État complet envoyé à l'interface
-local function etat(source, joueur)
-    local vip = estVip(source)
-    local ligne = ligneJoueur(joueur.identifiant)
+local function etat(source, joueur, cle)
+    local vip = estVip(source) == true
+    local ligne = ligneJoueur(cle, joueur.identifiant)
     local disponible = vip and ligne.dernier_jour ~= jour(0)
 
     -- Jour mis en avant : celui à récupérer, sinon celui de demain
@@ -252,33 +342,46 @@ end
 
 -- Distribution --------------------------------------------------------------------
 
+--- Renvoie false + raison si rien n'a été remis (le jour est alors rendu au joueur)
 local function donnerRecompense(source, recompense)
     local donnes, manques = {}, {}
+    local premierItem = true
 
-    -- Items d'abord : si le tout premier échoue (inventaire plein), rien n'a été donné
-    for i, item in ipairs(recompense.items or {}) do
+    -- Items d'abord : si le premier échoue (inventaire plein), rien n'a été donné
+    for _, item in ipairs(recompense.items or {}) do
         local quantite = math.floor(tonumber(item.quantite) or 0)
-        if quantite > 0 and Bridge.AddItem(source, item.nom, quantite) then
-            donnes[#donnes + 1] = ('%dx %s'):format(quantite, item.label or item.nom)
-        else
-            if i == 1 then return false, 'inventaire' end
-            manques[#manques + 1] = item.label or item.nom
+        local nomValide = type(item.nom) == 'string' and item.nom ~= ''
+        if nomValide and quantite > 0 then
+            if Bridge.AddItem(source, item.nom, quantite) then
+                donnes[#donnes + 1] = ('%dx %s'):format(quantite, item.label or item.nom)
+            else
+                if premierItem then return false, 'inventaire' end
+                manques[#manques + 1] = item.label or item.nom
+            end
+            premierItem = false
         end
+        -- Item mal configuré : déjà signalé dans la console au démarrage
     end
 
     local argent = recompense.argent
     if argent then
         local montant = math.floor(tonumber(argent.montant) or 0)
         local compte = argent.compte == 'cash' and 'cash' or 'bank'
+        local texteArgent = ('$%d (%s)'):format(montant, compte == 'cash' and _L('liquide') or _L('banque'))
         if montant > 0 and montant <= Config.MontantMax then
             if Bridge.AddMoney(source, compte, montant, 'ash_vipdaily : récompense quotidienne') then
-                donnes[#donnes + 1] = ('$%d (%s)'):format(montant, compte == 'cash' and _L('liquide') or _L('banque'))
+                donnes[#donnes + 1] = texteArgent
+            else
+                avertir(('versement de %s refusé par le framework pour le joueur %s'):format(texteArgent, source))
+                manques[#manques + 1] = texteArgent
             end
         else
-            print(('[ash_vipdaily] montant refusé (%s) : vérifiez Config.Recompenses / Config.MontantMax'):format(montant))
+            avertir(('montant refusé (%s) : vérifiez Config.Recompenses / Config.MontantMax'):format(montant))
+            manques[#manques + 1] = texteArgent
         end
     end
 
+    if #donnes == 0 then return false, 'rien' end
     return true, donnes, manques
 end
 
@@ -286,25 +389,36 @@ end
 
 lib.callback.register('ash_vipdaily:server:ouvrir', function(source)
     if not autorise(source) then return false end
+    if not pasTropRapide(source, derniereOuverture, Config.DelaiOuverture or 1000, true) then return false end
     local joueur = Bridge.GetPlayer(source)
-    if not joueur then return false end
-    return etat(source, joueur)
+    local cle = cleCompte(source)
+    if not joueur or not cle then
+        notifier(source, _L('personnage_non_charge'), 'error')
+        return false
+    end
+    return etat(source, joueur, cle)
 end)
 
 lib.callback.register('ash_vipdaily:server:rappel', function(source)
     if not Config.RappelConnexion then return false end
+    if not pasTropRapide(source, derniereOuverture, Config.DelaiOuverture or 1000, false) then return false end
     local joueur = Bridge.GetPlayer(source)
-    if not joueur or not estVip(source) then return false end
-    return ligneJoueur(joueur.identifiant).dernier_jour ~= jour(0)
+    local cle = cleCompte(source)
+    if not joueur or not cle or estVip(source) ~= true then return false end
+    return ligneJoueur(cle, joueur.identifiant).dernier_jour ~= jour(0)
 end)
 
 lib.callback.register('ash_vipdaily:server:action', function(source, data)
     if not autorise(source) then return false end
-    if not pasTropRapide(source) then return false end
+    if not pasTropRapide(source, dernierAppel, Config.DelaiActions, true) then return false end
 
     -- Seule action acceptée ; le contenu de la récompense est décidé ici, jamais par le client
     if type(data) ~= 'table' or data.type ~= 'recuperer' then
         debug(('données invalides de %s'):format(source))
+        return false
+    end
+    if not configValide then
+        notifier(source, _L('action_erreur'), 'error')
         return false
     end
     if verrou[source] then return false end
@@ -316,16 +430,26 @@ lib.callback.register('ash_vipdaily:server:action', function(source, data)
     end
 
     local joueur = Bridge.GetPlayer(source)
-    if not joueur then return finir(false) end
+    local cle = cleCompte(source)
+    if not joueur or not cle then
+        notifier(source, _L('personnage_non_charge'), 'error')
+        return finir(false)
+    end
 
     -- Statut VIP revérifié au moment de récupérer (pas de cache)
-    if not estVip(source, true) then
-        notifier(source, _L('pas_vip'), 'error')
+    local vip, erreurVip = estVip(source, true)
+    if not vip then
+        if erreurVip then
+            avertir(('statut VIP de %s illisible : %s'):format(cle, erreurVip))
+            notifier(source, _L('discord_indisponible'), 'error')
+        else
+            notifier(source, _L('pas_vip'), 'error')
+        end
         return finir(false)
     end
 
     local aujourdhui = jour(0)
-    local ligne = ligneJoueur(joueur.identifiant)
+    local ligne = ligneJoueur(cle, joueur.identifiant)
     if ligne.dernier_jour == aujourdhui then
         notifier(source, _L('deja_recupere'), 'warning')
         return finir(false)
@@ -335,11 +459,11 @@ lib.callback.register('ash_vipdaily:server:action', function(source, data)
     local recompense = Config.Recompenses[indexRecompense(serie)]
 
     -- Réservation atomique du jour : même avec deux personnages / deux requêtes, une seule passe
-    MySQL.insert.await('INSERT IGNORE INTO `ash_vipdaily_joueurs` (identifiant) VALUES (?)', { joueur.identifiant })
+    MySQL.insert.await('INSERT IGNORE INTO `ash_vipdaily_joueurs` (identifiant) VALUES (?)', { cle })
     local modifie = MySQL.update.await([[
         UPDATE `ash_vipdaily_joueurs` SET dernier_jour = ?, serie = ?, total = total + 1
         WHERE identifiant = ? AND (dernier_jour IS NULL OR dernier_jour <> ?)
-    ]], { aujourdhui, serie, joueur.identifiant, aujourdhui })
+    ]], { aujourdhui, serie, cle, aujourdhui })
 
     if modifie ~= 1 then
         notifier(source, _L('deja_recupere'), 'warning')
@@ -351,8 +475,8 @@ lib.callback.register('ash_vipdaily:server:action', function(source, data)
         -- Rien n'a été donné : on rend le jour au joueur
         MySQL.update.await(
             'UPDATE `ash_vipdaily_joueurs` SET dernier_jour = ?, serie = ?, total = total - 1 WHERE identifiant = ?',
-            { ligne.dernier_jour, ligne.serie or 0, joueur.identifiant })
-        notifier(source, _L('inventaire_plein'), 'error')
+            { ligne.dernier_jour, ligne.serie or 0, cle })
+        notifier(source, donnes == 'inventaire' and _L('inventaire_plein') or _L('remise_impossible'), 'error')
         return finir(false)
     end
 
@@ -361,20 +485,21 @@ lib.callback.register('ash_vipdaily:server:action', function(source, data)
         notifier(source, _L('items_manques', table.concat(manques, ', ')), 'warning')
     end
 
-    logDiscord(_L('log_titre'), ('**%s** (%s) — jour %d, série %d\n%s%s'):format(
-        joueur.prenom .. ' ' .. joueur.nom, joueur.identifiant, indexRecompense(serie), serie,
+    logDiscord(_L('log_titre'), ('**%s** (%s, %s) — jour %d, série %d\n%s%s'):format(
+        joueur.prenom .. ' ' .. joueur.nom, joueur.identifiant, cle, indexRecompense(serie), serie,
         table.concat(donnes, ', '),
         #manques > 0 and ('\n⚠ Non remis : ' .. table.concat(manques, ', ')) or ''
     ), #manques > 0 and 16753920 or 4054148)
 
-    debug(('%s a récupéré le jour %d'):format(joueur.identifiant, serie))
-    return finir(etat(source, joueur))
+    debug(('%s a récupéré le jour %d'):format(cle, serie))
+    return finir(etat(source, joueur, cle))
 end)
 
 -- Nettoyage ---------------------------------------------------------------------------
 
 AddEventHandler('playerDropped', function()
     dernierAppel[source] = nil
+    derniereOuverture[source] = nil
     verrou[source] = nil
     cacheVip[source] = nil
 end)

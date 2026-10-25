@@ -37,8 +37,11 @@ Hors ash_newplayers : statut mis en cache 10 min pour l'affichage, revérifié s
 ## Sécurité
 
 - Récompense, montants et jour calculés uniquement côté serveur ; plafond `Config.MontantMax`.
-- Une seule récupération par jour et par personnage, garantie en base (requête atomique).
-- Inventaire plein sur le premier item : rien n'est donné, le jour n'est pas consommé.
+- Une seule récupération par jour et par compte (licence Rockstar), quel que soit le nombre de personnages,
+  garantie en base (requête atomique). Mise à jour depuis la v1.3.0 : la série du premier personnage connecté est reprise.
+- Inventaire plein sur le premier item, ou rien de versé : rien n'est perdu, le jour n'est pas consommé.
+- Discord indisponible au moment de récupérer : message clair au joueur, avertissement en console.
+- Config vérifiée au démarrage (montants, comptes, items) : les erreurs s'affichent dans la console serveur.
 - Token et webhook en convars, jamais envoyés aux clients.
 
 ## Compatibilité

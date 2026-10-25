@@ -19,6 +19,7 @@ Config.AcePermission = 'wan.staff'
 
 -- Anti-spam : délai minimum entre deux actions d'un même joueur (ms)
 Config.DelaiActions = 1500
+Config.DelaiOuverture = 1000  -- entre deux ouvertures du panneau
 
 -------------------------------------------------------------------------------------
 -- Détection du grade VIP
