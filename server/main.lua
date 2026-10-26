@@ -19,12 +19,9 @@ local function avertir(message)
     print(('^3[ash_vipdaily] %s^0'):format(message))
 end
 
+--- Le client affiche avec ash_notify (ou ox_lib en secours) : voir Config.Notifications
 local function notifier(source, message, typeNotif)
-    TriggerClientEvent('ox_lib:notify', source, {
-        title = _L('titre'),
-        description = message,
-        type = typeNotif or 'inform',
-    })
+    TriggerClientEvent('ash_vipdaily:client:notifier', source, message, typeNotif or 'inform')
 end
 
 local function estStaff(source)

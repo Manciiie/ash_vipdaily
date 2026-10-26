@@ -9,6 +9,17 @@ Config.Debug = false
 -- Framework : 'auto' (détection), 'qbcore', 'qbox' ou 'esx'
 Config.Framework = 'auto'
 
+-- Notifications : ash_notify (exports['ash_notify']:SendAlert), ox_lib en secours
+--   systeme   : 'ash_notify' ou 'ox_lib'
+--   ressource : nom du dossier d'ash_notify sur le serveur (ensure ash_notify AVANT ash_vipdaily)
+-- Si ash_notify n'est pas démarrée, ox_lib prend le relais (une ligne jaune l'indique en F8).
+Config.Notifications = {
+    systeme   = 'ash_notify',
+    ressource = 'ash_notify',
+    duree     = 5000,   -- ms
+    son       = { success = true, error = true, warning = false, info = false },
+}
+
 -- Ouverture : la récompense se récupère auprès du PNJ (Config.Pnj).
 -- Commande désactivée par défaut. Si vous en mettez une, elle ouvre le panneau pour consulter,
 -- mais la récupération reste refusée loin du PNJ (vérifié par le serveur).

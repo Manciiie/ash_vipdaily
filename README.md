@@ -7,7 +7,7 @@ Cycle de 31 jours : récupérer chaque jour fait avancer la série. Paliers aux 
 
 1. Déposer le dossier `ash_vipdaily` dans `resources/`.
 2. Renommer `html/app.js.txt` en `html/app.js` (renommé pour l'antivirus).
-3. Dans `server.cfg`, après le framework, ox_lib, oxmysql et `ash_newplayers` :
+3. Dans `server.cfg`, après le framework, ox_lib, oxmysql, `ash_newplayers` et `ash_notify` :
    ```
    set ash_vipdaily_webhook "https://discord.com/api/webhooks/..."   # optionnel
    ensure ash_vipdaily
@@ -53,4 +53,5 @@ Hors ash_newplayers : statut mis en cache 10 min pour l'affichage, revérifié s
 ## Compatibilité
 
 QBCore, Qbox, ESX (détection automatique). Items : qs-inventory, ox_inventory ou inventaire du framework.
+Notifications : ash_notify (`Config.Notifications`, son réglable par type), ox_lib si ash_notify n'est pas démarrée.
 0.00 ms au repos.

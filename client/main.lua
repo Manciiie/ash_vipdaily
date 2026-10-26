@@ -6,6 +6,39 @@
 
 local nuiOuverte = false
 
+-- Notifications : ash_notify si démarrée, sinon ox_lib -------------------------
+
+local TYPES_ASH = { inform = 'info', info = 'info', success = 'success', error = 'error', warning = 'warning' }
+local secoursSignale = false
+
+local function notifier(message, typeNotif, duree)
+    local N = Config.Notifications or {}
+    duree = duree or N.duree or 5000
+
+    if (N.systeme or 'ash_notify') == 'ash_notify' then
+        local ressource = N.ressource or 'ash_notify'
+        if GetResourceState(ressource) == 'started' then
+            local typeAsh = TYPES_ASH[typeNotif or 'inform'] or 'info'
+            local son = N.son and N.son[typeAsh] or false
+            local ok, err = pcall(function()
+                exports[ressource]:SendAlert(_L('titre'), message, duree, typeAsh, son)
+            end)
+            if ok then return end
+            print(('^1[ash_vipdaily] %s en erreur, ox_lib utilisé : %s^0'):format(ressource, tostring(err)))
+        elseif not secoursSignale then
+            secoursSignale = true
+            print(('^3[ash_vipdaily] %s n\'est pas démarrée : notifications ox_lib utilisées^0'):format(ressource))
+        end
+    end
+    lib.notify({ title = _L('titre'), description = message, type = typeNotif or 'inform', duration = duree })
+end
+
+-- Notifications envoyées par le serveur de cette ressource
+RegisterNetEvent('ash_vipdaily:client:notifier', function(message, typeNotif)
+    if type(message) ~= 'string' then return end
+    notifier(message, typeNotif)
+end)
+
 local function ouvrir()
     if nuiOuverte then return end
 
@@ -151,7 +184,7 @@ end
 exports('GuiderVersPnj', function()
     if not pnj.Actif then return false end
     SetNewWaypoint(pnj.Coords.x, pnj.Coords.y)
-    lib.notify({ title = _L('titre'), description = _L('gps_pnj'), type = 'inform' })
+    notifier(_L('gps_pnj'), 'inform')
     return true
 end)
 
@@ -170,7 +203,7 @@ Bridge.OnPlayerLoaded(function()
     if not Config.RappelConnexion then return end
     SetTimeout(15000, function()
         if lib.callback.await('ash_vipdaily:server:rappel', false) then
-            lib.notify({ title = _L('titre'), description = _L('rappel'), type = 'inform', duration = 10000 })
+            notifier(_L('rappel'), 'inform', 10000)
         end
     end)
 end)
