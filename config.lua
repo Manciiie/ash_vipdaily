@@ -142,7 +142,7 @@ Config.Recompenses = {
 Config.MontantMax = 50000
 
 -- Prévenir le VIP à la connexion quand une récompense l'attend
-Config.RappelConnexion = true
+Config.RappelConnexion = false
 
 -- Logs Discord (optionnel) : mettez l'URL du webhook dans server.cfg :
 --     set ash_vipdaily_webhook "https://discord.com/api/webhooks/..."
