@@ -8,89 +8,430 @@
 <body>
     <div id="app" class="ash-panneau" aria-hidden="true">
 
-        <header class="ash-entete">
+        <header class="vip-entete">
             <div class="ash-marque">
                 <span class="ash-logo">ASH<span class="ash-point"></span></span>
                 <span class="ash-sous-titre" id="titre">Récompenses VIP</span>
             </div>
-            <nav class="ash-onglets">
-                <button class="ash-onglet actif" data-onglet="calendrier"><span class="ash-num">01</span>Calendrier</button>
-                <button class="ash-onglet" data-onglet="serie"><span class="ash-num">02</span>Ma série</button>
-            </nav>
+            <div class="vip-puce-serie" id="puce-serie">
+                <svg class="vip-flamme" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff8a3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c4 0 7-3 7-7 0-4-3-6-4-10-2 2-3 4-3 6-1-1-2-2-2-4-2 2-5 5-5 8 0 4 3 7 7 7z"/></svg>
+                <div>
+                    <strong id="serie-texte">—</strong>
+                    <span id="rang-texte">—</span>
+                </div>
+            </div>
+            <div class="vip-puce-bouclier" title="Un jour manqué ne casse pas la série">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7cc4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span id="boucliers-texte">—</span>
+            </div>
+            <button type="button" class="vip-fermer" id="btn-fermer" aria-label="Fermer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
         </header>
 
-        <main class="ash-contenu vip-contenu">
-            <section class="ash-page actif vip-page-calendrier" data-page="calendrier">
+        <main class="vip-corps">
 
-                <!-- Récompense mise en avant (du jour, ou jour sélectionné) -->
-                <aside class="vip-hero" id="hero">
-                    <div class="vip-hero-haut">
-                        <span class="vip-etiquette" id="hero-etiquette">Récompense du jour</span>
-                        <span class="vip-badge" id="hero-badge" hidden>★ Palier</span>
-                    </div>
-                    <div class="vip-hero-jour">
-                        <span class="vip-hero-num" id="hero-num">—</span>
-                        <span class="vip-hero-sur" id="hero-sur">/ 31</span>
-                    </div>
+            <!-- Coffre du jour -->
+            <section class="vip-col-coffre" id="col-coffre">
+                <span class="vip-titre-bloc" id="coffre-titre">Coffre du jour</span>
 
-                    <div class="vip-hero-argent" id="hero-argent">
-                        <strong id="hero-montant">—</strong>
-                        <span id="hero-compte"></span>
+                <div class="vip-scene" id="scene-ferme">
+                    <div class="vip-coffre pret" id="coffre">
+                        <svg width="92" height="92" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 10V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/><path d="M2 10h20"/><rect x="10" y="9" width="4" height="5" rx="1"/></svg>
                     </div>
-                    <div class="vip-puces" id="hero-items"></div>
+                    <strong class="vip-scene-titre" id="scene-titre">Coffre VIP</strong>
+                    <p class="vip-scene-texte" id="scene-texte"></p>
+                </div>
 
-                    <div class="vip-hero-bas">
-                        <div class="vip-progression">
-                            <div class="vip-progression-texte">
-                                <span>Progression du cycle</span>
-                                <strong id="hero-progression">0 / 31</strong>
-                            </div>
-                            <div class="vip-barre"><div class="vip-barre-rempli" id="hero-barre"></div><div class="vip-reperes" id="hero-reperes"></div></div>
-                            <p class="vip-palier-suivant" id="hero-palier"></p>
-                        </div>
+                <div class="vip-scene vip-revele" id="scene-revele" hidden>
+                    <span class="vip-badge-bonus" id="revele-bonus">BONUS ×1</span>
+                    <strong class="vip-gain" id="revele-gain">—</strong>
+                    <span class="vip-scene-texte" id="revele-calcul"></span>
+                    <div class="vip-puces" id="revele-items"></div>
+                </div>
 
-                        <button class="ash-bouton vip-recuperer" id="btn-recuperer" disabled>
-                            <span id="btn-texte">Récupérer</span>
-                        </button>
-                        <p class="vip-sous-bouton" id="sous-bouton"></p>
+                <button type="button" class="vip-bouton" id="btn-coffre" disabled>Ouvrir le coffre</button>
+
+                <div class="vip-demain" id="demain">
+                    <div class="vip-demain-icone" aria-hidden="true">?</div>
+                    <div>
+                        <strong id="demain-titre">Demain</strong>
+                        <span id="demain-texte"></span>
                     </div>
-                </aside>
-
-                <!-- Calendrier 31 jours -->
-                <div class="vip-calendrier">
-                    <div class="vip-calendrier-entete">
-                        <span>Cycle de <strong id="nb-jours">31</strong> jours</span>
-                        <span class="vip-legende">
-                            <i class="vip-pastille passe"></i>Récupéré
-                            <i class="vip-pastille courant"></i>À récupérer
-                            <i class="vip-pastille gros"></i>Palier
-                        </span>
-                    </div>
-                    <div class="vip-grille" id="grille"></div>
                 </div>
             </section>
 
-            <section class="ash-page" data-page="serie">
-                <h2 class="ash-h2">Ma série</h2>
-                <div class="vip-stats">
-                    <div class="vip-stat"><span>Jours consécutifs</span><strong id="info-serie">—</strong></div>
-                    <div class="vip-stat"><span>Récompenses récupérées</span><strong id="info-total">—</strong></div>
-                    <div class="vip-stat"><span>Prochaine récompense</span><strong id="info-reinit">—</strong></div>
+            <!-- Série -->
+            <section class="vip-col-milieu">
+                <div class="vip-carte">
+                    <div class="vip-ligne-titre">
+                        <span class="vip-titre-bloc">Ta chaîne</span>
+                        <span class="vip-accent-or" id="chaine-palier"></span>
+                    </div>
+                    <div class="vip-chaine" id="chaine"></div>
                 </div>
-                <div class="ash-carte">
-                    <div class="ash-ligne"><span>Joueur</span><strong id="info-joueur">—</strong></div>
-                    <div class="ash-ligne"><span>Statut</span><strong id="info-vip">—</strong></div>
+
+                <div class="vip-carte">
+                    <span class="vip-titre-bloc">Rangs de série</span>
+                    <div class="vip-rangs" id="rangs"></div>
+                    <span class="vip-note" id="rang-suivant"></span>
                 </div>
-                <p class="ash-texte-2 vip-note">Récupérez chaque jour pour avancer dans le cycle. Les paliers (★) donnent les plus grosses récompenses, le dernier jour étant le plus gros. Un jour manqué peut remettre la série à zéro.</p>
+
+                <div class="vip-carte vip-cycle">
+                    <div>
+                        <span class="vip-titre-bloc">Cycle de <span id="nb-jours">31</span> jours</span>
+                        <div class="vip-barre"><i id="cycle-barre" style="width: 0%"></i></div>
+                    </div>
+                    <strong id="cycle-texte">0 / 31</strong>
+                    <span class="vip-accent-or" id="cycle-final"></span>
+                </div>
+            </section>
+
+            <!-- Défis et classement -->
+            <section class="vip-col-droite">
+                <div class="vip-carte">
+                    <div class="vip-ligne-titre">
+                        <span class="vip-titre-bloc">Défis de la semaine</span>
+                        <span class="vip-note">lundi</span>
+                    </div>
+                    <div id="defis" class="vip-carte" style="padding: 0; border: none; background: none;"></div>
+                    <div class="vip-cles">
+                        <div class="vip-cles-ligne">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f5c542" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="m10.85 12.15 8.65-8.65M18 5l2 2M15 8l2 2"/></svg>
+                            <span><b id="cles-texte">0 / 3 clés</b> pour ouvrir le coffre légendaire</span>
+                        </div>
+                        <button type="button" class="vip-bouton or" id="btn-legendaire" hidden>Ouvrir le coffre légendaire</button>
+                    </div>
+                </div>
+
+                <div class="vip-carte vip-classement" id="bloc-classement">
+                    <span class="vip-titre-bloc">Meilleures séries VIP</span>
+                    <div id="classement"></div>
+                </div>
             </section>
         </main>
 
         <footer class="ash-pied">
-            <span>ASH City / Roleplay</span>
+            <span id="pied-texte">Nouveau coffre chaque jour · une récupération par compte</span>
             <span><kbd>ÉCHAP</kbd> Fermer</span>
         </footer>
+
+        <!-- Coffre légendaire ouvert -->
+        <div class="vip-voile" id="voile" hidden>
+            <div class="vip-voile-carte vip-revele">
+                <span class="vip-titre-bloc">Coffre légendaire</span>
+                <strong class="vip-gain" id="voile-gain">—</strong>
+                <div class="vip-puces" id="voile-items"></div>
+                <button type="button" class="vip-bouton or" id="btn-voile">Continuer</button>
+            </div>
+        </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+    // Interface NUI — thème ASH. Intégrée au HTML : un fichier .js séparé peut être bloqué par l'antivirus.
+    // Toutes les données viennent du serveur ; affichage uniquement en textContent (jamais innerHTML).
+    (() => {
+        const app = document.getElementById('app');
+        const ressource = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'ash_vipdaily';
+        const $ = (id) => document.getElementById(id);
+        const nombre = new Intl.NumberFormat('fr-FR');
+        const argent = (n) => `${nombre.format(n || 0)} $`;
+        const virgule = (x) => String(x).replace('.', ',');
+
+        let visible = false;
+        let etat = null;
+        let revelation = null;   // résultat du coffre ouvert pendant cette ouverture du panneau
+        let enCours = false;
+
+        function envoyer(nom, donnees = {}) {
+            return fetch(`https://${ressource}/${nom}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+                body: JSON.stringify(donnees),
+            }).then((r) => r.json()).catch(() => null);
+        }
+
+        function texte(id, valeur) {
+            const e = $(id);
+            if (e) e.textContent = valeur ?? '—';
+        }
+
+        function el(balise, classe, contenu) {
+            const e = document.createElement(balise);
+            if (classe) e.className = classe;
+            if (contenu !== undefined) e.textContent = contenu;
+            return e;
+        }
+
+        function puces(conteneur, items) {
+            conteneur.replaceChildren();
+            (items || []).forEach((it) => {
+                const p = el('span', 'vip-puce');
+                p.appendChild(el('b', null, `${it.quantite}×`));
+                p.appendChild(document.createTextNode(it.label));
+                conteneur.appendChild(p);
+            });
+        }
+
+        const nbJours = () => (etat && etat.recompenses ? etat.recompenses.length : 31);
+        const lot = (jour) => (etat && etat.recompenses ? etat.recompenses[jour - 1] : null) || {};
+
+        // En-tête -------------------------------------------------------------------------
+        function entete() {
+            const serie = etat.serie || 0;
+            $('puce-serie').classList.toggle('eteinte', serie === 0);
+            texte('serie-texte', serie > 0 ? `${serie} jour${serie > 1 ? 's' : ''} de suite` : 'Aucune série');
+            texte('rang-texte', `Rang ${etat.rang.nom} · gains ×${virgule(etat.rang.mult)}`);
+            texte('boucliers-texte', `${etat.boucliers} / ${etat.boucliersMax} bouclier${etat.boucliersMax > 1 ? 's' : ''}`);
+        }
+
+        // Coffre du jour ----------------------------------------------------------------
+        function coffre() {
+            const jour = revelation ? revelation.jour : etat.jourCycle;
+            const l = lot(jour);
+            const palier = !!l.gros;
+            $('col-coffre').classList.toggle('palier', palier);
+            texte('coffre-titre', `Coffre du jour ${jour} / ${nbJours()}`);
+
+            const bouton = $('btn-coffre');
+            const scene = $('coffre');
+            $('scene-ferme').hidden = !!revelation;
+            $('scene-revele').hidden = !revelation;
+
+            if (revelation) {
+                const b = revelation.bonus;
+                const badge = $('revele-bonus');
+                badge.className = 'vip-badge-bonus' + (b >= 1.5 ? ' gros' : b > 1 ? ' moyen' : '');
+                texte('revele-bonus', `BONUS ×${virgule(b)}`);
+                texte('revele-gain', argent(revelation.montant));
+                texte('revele-calcul', `${argent(revelation.base)} × rang ${virgule(revelation.rang.mult)} × bonus ${virgule(b)}`);
+                puces($('revele-items'), revelation.items);
+                bouton.disabled = true;
+                bouton.textContent = 'Coffre ouvert · reviens demain';
+                return;
+            }
+
+            texte('scene-titre', palier ? 'Coffre de palier' : 'Coffre VIP');
+            scene.className = 'vip-coffre';
+            if (!etat.vip) {
+                scene.classList.add('verrouille');
+                texte('scene-texte', 'Réservé aux VIP. Obtenez le grade VIP pour ouvrir un coffre chaque jour.');
+                bouton.disabled = true;
+                bouton.textContent = 'Réservé aux VIP';
+            } else if (etat.dejaRecupere) {
+                scene.classList.add('verrouille');
+                texte('scene-texte', 'Coffre du jour déjà ouvert. Le prochain t’attend demain.');
+                bouton.disabled = true;
+                bouton.textContent = 'Coffre ouvert · reviens demain';
+            } else {
+                scene.classList.add(enCours ? 'ouverture' : 'pret');
+                const base = l.argent ? argent(l.argent.montant) : 'Objets';
+                let t = `Base ${base} · rang ×${virgule(etat.rang.mult)} · bonus surprise jusqu'à ×${virgule(etat.bonusMax)}`;
+                if (etat.bouclierPrevu) t += '. Un bouclier va protéger ta série.';
+                texte('scene-texte', t);
+                bouton.disabled = enCours;
+                bouton.textContent = enCours ? 'Ouverture…' : 'Ouvrir le coffre';
+            }
+        }
+
+        function demain() {
+            const d = etat.demain || {};
+            const fin = etat.jourCycle >= nbJours() && etat.dejaRecupere;
+            $('demain').classList.toggle('palier', !!d.gros);
+            texte('demain-titre', fin ? 'Demain : nouveau cycle' : `Demain : ${d.gros ? 'coffre de palier' : 'coffre VIP'}`);
+            if (!etat.vip) texte('demain-texte', 'Chaque jour un coffre, plus gros avec la série.');
+            else if (d.gros) texte('demain-texte', `Jusqu'à ${argent(d.max)} avec le bonus. Ne casse pas ta série.`);
+            else texte('demain-texte', `Jusqu'à ${argent(d.max)}. Reviens pour garder ton rang ${etat.rang.nom}.`);
+        }
+
+        // Chaîne de 7 jours autour d'aujourd'hui ----------------------------------------
+        function chaine() {
+            const n = nbJours();
+            const ajd = etat.dejaRecupere ? ((etat.jourCycle - 2 + n) % n) + 1 : etat.jourCycle;
+            const faitsAvant = etat.dejaRecupere ? Math.max(0, (etat.serie || 0) - 1) : (etat.serie || 0);
+            const grille = $('chaine');
+            grille.replaceChildren();
+            for (let ecart = -3; ecart <= 3; ecart++) {
+                const jour = ((ajd - 1 + ecart) % n + n) % n + 1;
+                const palier = !!lot(jour).gros;
+                const m = el('div', 'vip-maillon');
+                let ico = '?', leg = `J+${ecart}`;
+                if (ecart < 0) {
+                    if (faitsAvant >= -ecart) { m.classList.add('fait'); ico = '✓'; leg = 'fait'; }
+                    else { m.classList.add('manque'); ico = '–'; leg = 'manqué'; }
+                } else if (ecart === 0) {
+                    if (etat.dejaRecupere) { m.classList.add('fait'); ico = '✓'; leg = 'fait'; }
+                    else { m.classList.add('ajd'); ico = '!'; leg = 'à ouvrir'; }
+                } else if (palier) { ico = '★'; leg = 'palier'; }
+                if (palier) m.classList.add('palier');
+                m.appendChild(el('span', 'num', `J${jour}`));
+                m.appendChild(el('span', 'ico', ico));
+                m.appendChild(el('span', 'leg', leg));
+                grille.appendChild(m);
+            }
+            // Prochain palier
+            let reste = null;
+            for (let i = etat.dejaRecupere ? 1 : 0; i <= n; i++) {
+                if (lot(((ajd - 1 + i) % n) + 1).gros) { reste = i; break; }
+            }
+            texte('chaine-palier', reste === null ? '' : reste === 0 ? "Palier aujourd'hui" : reste === 1 ? 'Palier demain' : `Palier dans ${reste} jours`);
+        }
+
+        function rangs() {
+            const conteneur = $('rangs');
+            conteneur.replaceChildren();
+            const serie = Math.max(1, etat.serie || 0);
+            (etat.rangs || []).forEach((r) => {
+                const carte = el('div', 'vip-rang');
+                if (r.nom === etat.rang.nom) carte.classList.add('actuel');
+                else if (serie >= r.min) carte.classList.add('atteint');
+                carte.appendChild(el('strong', null, r.nom));
+                carte.appendChild(el('span', null, `dès ${r.min} j`));
+                carte.appendChild(el('b', null, `×${virgule(r.mult)}`));
+                conteneur.appendChild(carte);
+            });
+            const s = etat.rangSuivant;
+            texte('rang-suivant', s
+                ? `Encore ${s.dans} jour${s.dans > 1 ? 's' : ''} de série pour passer ${s.nom} (gains ×${virgule(s.mult)}).`
+                : 'Rang maximal : garde ta série pour le conserver.');
+        }
+
+        function cycle() {
+            const n = nbJours();
+            const faits = etat.dejaRecupere ? etat.jourCycle - 1 || n : etat.jourCycle - 1;
+            texte('nb-jours', String(n));
+            texte('cycle-texte', `${faits} / ${n}`);
+            $('cycle-barre').style.width = `${(faits / n) * 100}%`;
+            const dernier = lot(n);
+            texte('cycle-final', dernier.argent ? `Jour ${n} : ${argent(dernier.argent.montant)}` : '');
+        }
+
+        // Défis, clés, classement --------------------------------------------------------
+        function defis() {
+            const conteneur = $('defis');
+            conteneur.replaceChildren();
+            (etat.defis || []).forEach((d) => {
+                const bloc = el('div', 'vip-defi' + (d.fait ? ' fait' : ''));
+                const ligne = el('div', 'vip-defi-ligne');
+                ligne.appendChild(el('span', null, d.label));
+                const avance = d.id === 'temps'
+                    ? `${virgule((d.progression / 3600).toFixed(1))} / ${virgule(d.objectif / 3600)} h`
+                    : `${d.progression} / ${d.objectif}`;
+                ligne.appendChild(el('strong', null, d.fait ? 'Réussi' : avance));
+                bloc.appendChild(ligne);
+                const barre = el('div', 'vip-barre');
+                const rempli = el('i');
+                rempli.style.width = `${Math.min(100, (d.progression / Math.max(1, d.objectif)) * 100)}%`;
+                barre.appendChild(rempli);
+                bloc.appendChild(barre);
+                const gains = [];
+                if (d.cles) gains.push(`${d.cles} clé${d.cles > 1 ? 's' : ''}`);
+                if (d.boucliers) gains.push(`${d.boucliers} bouclier${d.boucliers > 1 ? 's' : ''}`);
+                bloc.appendChild(el('small', null, `Gain : ${gains.join(' + ') || '—'}`));
+                conteneur.appendChild(bloc);
+            });
+
+            texte('cles-texte', `${etat.cles} / ${etat.clesRequises} clés`);
+            $('btn-legendaire').hidden = !(etat.vip && etat.cles >= etat.clesRequises);
+        }
+
+        function classement() {
+            const c = etat.classement;
+            $('bloc-classement').hidden = !c;
+            if (!c) return;
+            const liste = $('classement');
+            liste.replaceChildren();
+            if (!c.top.length) liste.appendChild(el('p', 'vip-vide', 'Aucune série en cours pour le moment.'));
+            let dejaListe = false;
+            c.top.forEach((l, i) => {
+                const moi = c.position === i + 1;
+                if (moi) dejaListe = true;
+                liste.appendChild(rangee(String(i + 1), moi ? 'Toi' : l.nom, l.serie, moi));
+            });
+            if (c.position && !dejaListe) liste.appendChild(rangee(String(c.position), 'Toi', c.serie, true));
+        }
+
+        function rangee(pos, nom, serie, moi) {
+            const r = el('div', 'vip-rangee' + (moi ? ' moi' : ''));
+            r.appendChild(el('span', 'pos', pos));
+            r.appendChild(el('span', 'nom', nom));
+            r.appendChild(el('strong', null, `${serie} j`));
+            return r;
+        }
+
+        function rendre() {
+            if (!etat) return;
+            entete();
+            coffre();
+            demain();
+            chaine();
+            rangs();
+            cycle();
+            defis();
+            classement();
+        }
+
+        // Actions --------------------------------------------------------------------------
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+
+        $('btn-coffre').addEventListener('click', async () => {
+            if (!etat || !etat.disponible || enCours || revelation) return;
+            enCours = true;
+            rendre();
+            // L'animation dure au moins 0,9 s, le temps que le serveur tire le bonus
+            const [reponse] = await Promise.all([envoyer('action', { type: 'recuperer' }), attendre(900)]);
+            enCours = false;
+            if (reponse && reponse.ok && reponse.etat) {
+                etat = reponse.etat;
+                revelation = reponse.etat.revelation || null;
+            }
+            rendre();
+        });
+
+        $('btn-legendaire').addEventListener('click', async () => {
+            const bouton = $('btn-legendaire');
+            bouton.disabled = true;
+            const reponse = await envoyer('action', { type: 'legendaire' });
+            bouton.disabled = false;
+            if (reponse && reponse.ok && reponse.etat) {
+                etat = reponse.etat;
+                const r = etat.revelationLegendaire;
+                if (r) {
+                    texte('voile-gain', r.montant ? argent(r.montant) : 'Objets');
+                    puces($('voile-items'), r.items);
+                    $('voile').hidden = false;
+                }
+                rendre();
+            }
+        });
+
+        $('btn-voile').addEventListener('click', () => { $('voile').hidden = true; });
+        $('btn-fermer').addEventListener('click', () => envoyer('fermer'));
+
+        // Ouverture / fermeture ------------------------------------------------------------
+        window.addEventListener('message', (evenement) => {
+            const m = evenement.data || {};
+            if (m.action === 'ouvrir') {
+                if (m.titre) texte('titre', m.titre);
+                etat = m.donnees;
+                revelation = null;
+                enCours = false;
+                $('voile').hidden = true;
+                rendre();
+                visible = true;
+                app.classList.add('visible');
+                app.setAttribute('aria-hidden', 'false');
+            } else if (m.action === 'fermer') {
+                visible = false;
+                app.classList.remove('visible');
+                app.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (visible && e.key === 'Escape') envoyer('fermer');
+        });
+    })();
+    </script>
 </body>
 </html>

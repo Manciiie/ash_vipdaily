@@ -138,8 +138,73 @@ Config.Recompenses = {
     { argent = { compte = 'bank', montant = 30000 }, items = { { nom = 'advancedrepairkit', quantite = 3, label = 'Kit de réparation avancé' }, { nom = 'lockpick', quantite = 5, label = 'Crochet' } }, gros = true }, -- jour 31
 }
 
--- Plafond de sécurité : aucun montant au-delà ne sera versé (protège d'une faute de frappe)
+-- Plafond de sécurité : un montant de Config.Recompenses au-delà n'est pas versé (faute de frappe),
+-- et l'argent d'un coffre (rang × bonus compris) n'est jamais versé au-delà de ce plafond.
 Config.MontantMax = 50000
+
+-------------------------------------------------------------------------------------
+-- Coffre du jour : bonus surprise
+-------------------------------------------------------------------------------------
+-- Tiré par le serveur à chaque ouverture. mult = multiplicateur de l'argent, chance = poids en %.
+Config.Bonus = {
+    { mult = 1,    chance = 55 },
+    { mult = 1.25, chance = 25 },
+    { mult = 1.5,  chance = 15 },
+    { mult = 2,    chance = 5 },
+}
+
+-------------------------------------------------------------------------------------
+-- Rangs de série : plus la série est longue, plus l'argent du coffre est multiplié
+-------------------------------------------------------------------------------------
+-- min = jours de série consécutifs pour atteindre le rang (du plus petit au plus grand)
+Config.Rangs = {
+    { nom = 'Bronze',  min = 1,  mult = 1 },
+    { nom = 'Argent',  min = 7,  mult = 1.1 },
+    { nom = 'Or',      min = 14, mult = 1.2 },
+    { nom = 'Platine', min = 21, mult = 1.3 },
+    { nom = 'Diamant', min = 28, mult = 1.5 },
+}
+
+-------------------------------------------------------------------------------------
+-- Boucliers de série : un jour manqué ne casse pas la série
+-------------------------------------------------------------------------------------
+-- Utilisé automatiquement si le VIP a manqué UN seul jour (avec Config.SerieStricte = true).
+Config.Boucliers = {
+    Max = 3,      -- boucliers stockables au maximum
+    Depart = 1,   -- offerts à la première récupération
+}
+
+-------------------------------------------------------------------------------------
+-- Défis de la semaine (remis à zéro chaque lundi à Config.HeureReinitialisation)
+-------------------------------------------------------------------------------------
+-- id : 'coffres' (coffres du jour ouverts), 'temps' (temps de jeu en secondes), 'palier' (jours palier récupérés)
+-- Gain donné automatiquement une fois par semaine : cles (coffre légendaire) et boucliers.
+Config.Defis = {
+    { id = 'coffres', label = 'Ouvrir 5 coffres',    objectif = 5,        cles = 1 },
+    { id = 'temps',   label = 'Jouer 3 h',           objectif = 3 * 3600, cles = 1 },
+    { id = 'palier',  label = 'Atteindre un palier', objectif = 1,        cles = 1, boucliers = 1 },
+}
+
+-------------------------------------------------------------------------------------
+-- Coffre légendaire : s'ouvre auprès du PNJ avec les clés gagnées par les défis
+-------------------------------------------------------------------------------------
+Config.CoffreLegendaire = {
+    Cles = 3,
+    argent = { compte = 'bank', montant = 25000 },
+    items = {
+        { nom = 'advancedrepairkit', quantite = 2, label = 'Kit de réparation avancé' },
+        { nom = 'lockpick', quantite = 5, label = 'Crochet' },
+    },
+}
+
+-------------------------------------------------------------------------------------
+-- Classement des meilleures séries VIP en cours (prénom + initiale du nom)
+-------------------------------------------------------------------------------------
+Config.Classement = {
+    Actif = true,
+    Taille = 5,           -- nombre de VIP affichés
+    CacheSecondes = 60,   -- le classement est recalculé au plus une fois par minute
+}
 
 -- Prévenir le VIP à la connexion quand une récompense l'attend
 Config.RappelConnexion = false
