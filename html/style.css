@@ -225,7 +225,10 @@ button { font: inherit; color: inherit; }
 .vip-maillon .leg { font-size: 10.5px; color: var(--ash-texte-2); }
 .vip-maillon.fait { border-color: rgba(61, 220, 132, 0.4); background: rgba(61, 220, 132, 0.08); }
 .vip-maillon.fait .ico { color: var(--ash-vert); }
-.vip-maillon.manque { opacity: 0.5; }
+.vip-maillon.avant { opacity: 0.4; border-style: dashed; background: transparent; }
+.vip-maillon.avant.palier:not(.fait) { border-color: var(--vip-bord-doux); }
+.vip-maillon.avant.palier:not(.fait) .num,
+.vip-maillon.avant.palier:not(.fait) .ico { color: var(--ash-texte-2); }
 .vip-maillon.ajd { border: 2px solid var(--ash-violet); background: rgba(155, 108, 255, 0.2); }
 .vip-maillon.ajd .ico { color: var(--ash-violet-clair); }
 .vip-maillon.palier:not(.fait) { border-color: var(--vip-or); }

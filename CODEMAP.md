@@ -3,11 +3,11 @@
 > Généré par `codemap.py` v2 : **ne pas modifier à la main**. Régénérer après chaque modification du code.
 > Format : `nom` suivi du numéro de ligne → lire seulement les lignes utiles (Read avec offset).
 
-**10 fichiers · 2262 lignes** · 8 lua · 1 sql · 1 html
+**10 fichiers · 2263 lignes** · 8 lua · 1 sql · 1 html
 
 ## Ressources FiveM
 
-- **vip_gh** (fx cerulean, v 2.0.2, lua54 yes)
+- **vip_gh** (fx cerulean, v 2.0.3, lua54 yes)
   - partagé : `@ox_lib/init.lua`, `config.lua`, `locales/fr.lua`, `bridge/shared.lua`
   - client : `bridge/client.lua`, `client/main.lua`
   - serveur : `@oxmysql/lib/MySQL.lua`, `bridge/server.lua`, `server/main.lua`
@@ -24,10 +24,10 @@
 - callback `ash_vipdaily:server:action` : déclaré `server/main.lua:986` ← appelé `client/main.lua:70`
 - callback `ash_vipdaily:server:ouvrir` : déclaré `server/main.lua:940` ← appelé `client/main.lua:46`
 - callback `ash_vipdaily:server:rappel` : déclaré `server/main.lua:956` ← appelé `client/main.lua:205`
-- NUI `action` : JS `html/index.html:384`, `html/index.html:396` → Lua `client/main.lua:68`
-- NUI `fermer` : JS `html/index.html:411`, `html/index.html:434` → Lua `client/main.lua:63`
-- NUI action `fermer` : Lua `client/main.lua:58` → JS `html/index.html:426`
-- NUI action `ouvrir` : Lua `client/main.lua:51` → JS `html/index.html:416`
+- NUI `action` : JS `html/index.html:385`, `html/index.html:397` → Lua `client/main.lua:68`
+- NUI `fermer` : JS `html/index.html:412`, `html/index.html:435` → Lua `client/main.lua:63`
+- NUI action `fermer` : Lua `client/main.lua:58` → JS `html/index.html:427`
+- NUI action `ouvrir` : Lua `client/main.lua:51` → JS `html/index.html:417`
 
 ## Fichiers
 
@@ -65,10 +65,10 @@
 - exports utilisés : `ox_target:removeLocalEntity` 93, `ox_target:addLocalEntity` 120
 - fonctions : `notifier(message, typeNotif, duree)` 14, `ouvrir()` 42, `fermer()` 54, `supprimerPed()` 90, `creerPed()` 100, `cacherTexte()` 131, `nearby()` 164, `onExit()` 175
 
-### html/index.html — NUI · 439 l.
-- NUI : callbacks envoyés au Lua : `action` 384, `action` 396, `fermer` 411, `fermer` 434
-- NUI : actions reçues : `ouvrir` 416, `fermer` 426
-- fonctions : `argent(n)` 138, `virgule(x)` 141, `envoyer(nom, donnees = {})` 148, `texte(id, valeur)` 156, `el(balise, classe, contenu)` 161, `puces(conteneur, items)` 168, `nbJours()` 178, `lot(jour)` 179, `entete()` 182, `coffre()` 191, `demain()` 239, `chaine()` 250, `rangs()` 282, `cycle()` 301, `defis()` 312, `classement()` 340, `rangee(pos, nom, serie, moi)` 356, `rendre()` 364, `attendre(ms)` 377
+### html/index.html — NUI · 440 l.
+- NUI : callbacks envoyés au Lua : `action` 385, `action` 397, `fermer` 412, `fermer` 435
+- NUI : actions reçues : `ouvrir` 417, `fermer` 427
+- fonctions : `argent(n)` 138, `virgule(x)` 141, `envoyer(nom, donnees = {})` 148, `texte(id, valeur)` 156, `el(balise, classe, contenu)` 161, `puces(conteneur, items)` 168, `nbJours()` 178, `lot(jour)` 179, `entete()` 182, `coffre()` 191, `demain()` 239, `chaine()` 250, `rangs()` 283, `cycle()` 302, `defis()` 313, `classement()` 341, `rangee(pos, nom, serie, moi)` 357, `rendre()` 365, `attendre(ms)` 378
 - écrans / sections : `col-coffre` 35
 - styles : `style.css`
 - script intégré : `<script>` 130

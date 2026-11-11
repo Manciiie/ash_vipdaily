@@ -260,7 +260,8 @@
                 let ico = '?', leg = `J+${ecart}`;
                 if (ecart < 0) {
                     if (faitsAvant >= -ecart) { m.classList.add('fait'); ico = '✓'; leg = 'fait'; }
-                    else { m.classList.add('manque'); ico = '–'; leg = 'manqué'; }
+                    // Avant le début de la série en cours : rien à faire ce jour-là, pas un jour « manqué »
+                    else { m.classList.add('avant'); ico = '·'; leg = ''; }
                 } else if (ecart === 0) {
                     if (etat.dejaRecupere) { m.classList.add('fait'); ico = '✓'; leg = 'fait'; }
                     else { m.classList.add('ajd'); ico = '!'; leg = 'à ouvrir'; }
