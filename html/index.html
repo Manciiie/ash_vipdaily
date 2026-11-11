@@ -136,7 +136,9 @@
         const $ = (id) => document.getElementById(id);
         const nombre = new Intl.NumberFormat('fr-FR');
         const argent = (n) => `${nombre.format(n || 0)} $`;
-        const virgule = (x) => String(x).replace('.', ',');
+        // Multiplicateurs et heures : 2 décimales au plus (1.0999999 venu du serveur → « 1,1 »)
+        const decimal = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 });
+        const virgule = (x) => decimal.format(Number(x) || 0);
 
         let visible = false;
         let etat = null;
