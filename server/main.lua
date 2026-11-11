@@ -5,6 +5,7 @@
 -- Le joueur, l'argent et les items passent par Bridge (bridge/server.lua) : QBCore, Qbox et ESX.
 local dernierAppel = {}
 local derniereOuverture = {}
+local derniereResume = {}
 local verrou = {}        -- empêche deux récupérations simultanées pour un même joueur
 local cacheVip = {}      -- [source] = { vip = bool, expire = os.time() }
 
@@ -389,6 +390,14 @@ CreateThread(function()
             end
         end
     end
+
+    -- Index du classement (série en cours) : ajouté une fois, aucun SQL à importer
+    local index = MySQL.single.await(
+        "SELECT COUNT(*) AS n FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ash_vipdaily_joueurs' AND INDEX_NAME = 'idx_classement'")
+    if index and index.n == 0 then
+        local ok, err = pcall(MySQL.query.await, 'ALTER TABLE `ash_vipdaily_joueurs` ADD INDEX `idx_classement` (`serie`, `dernier_jour`)')
+        if not ok then print(('^3[ash_vipdaily] index du classement non créé : %s^0'):format(tostring(err))) end
+    end
     basePrete = true
 end)
 
@@ -491,6 +500,8 @@ local function ligneBrute(source, cle, personnageActuel)
     return ligne
 end
 
+local suivis = {}   -- [source] = true : le compte a une ligne, son temps de jeu est enregistré
+
 --- Ligne du compte, compteurs de la semaine remis à zéro si une nouvelle semaine a commencé
 local function ligneJoueur(source, cle, personnageActuel)
     local ligne = ligneBrute(source, cle, personnageActuel)
@@ -499,6 +510,7 @@ local function ligneJoueur(source, cle, personnageActuel)
         vide.semaine = semaineCourante()
         return vide
     end
+    suivis[source] = true
     local semaine = semaineCourante()
     if ligne.semaine ~= semaine then
         MySQL.update.await([[
@@ -529,12 +541,14 @@ local function tempsSession(source)
     return debut and math.max(0, os.time() - debut) or 0
 end
 
---- Ajoute le temps de jeu non enregistré à la semaine du compte (seuls les comptes déjà connus sont suivis).
+--- Ajoute le temps de jeu non enregistré à la semaine du compte. Seuls les comptes qui ont une ligne
+--- sont suivis : pour les autres, aucune requête (leur temps reste compté depuis la connexion).
 --- Une seule requête, sans lecture : les compteurs d'une semaine passée sont remis à zéro dans le même UPDATE.
 local function enregistrerTemps(source)
+    if not suivis[source] or not basePrete then return end
     local ecoule = tempsSession(source)
     local cle = cleCompte(source)
-    if ecoule <= 0 or not cle or not basePrete then return end
+    if ecoule <= 0 or not cle then return end
     debutSession[source] = os.time()
     local semaine = semaineCourante()
     MySQL.update([[
@@ -614,8 +628,10 @@ local function validerDefis(source, cle, ligne)
 end
 
 local cacheClassement = { expire = 0, liste = {} }
+local cachePosition = {}   -- [source] = { expire, serie, position }
 
-local function classement(source, ligne)
+--- garderPosition = true : reprend la position en cache même si la série vient de changer (après un coffre)
+local function classement(source, ligne, garderPosition)
     local conf = Config.Classement
     if not conf or not conf.Actif then return nil end
     if os.time() >= cacheClassement.expire then
@@ -632,9 +648,15 @@ local function classement(source, ligne)
     local position
     local maSerie = serieActive(ligne)
     if maSerie > 0 and (ligne.dernier_jour or '') >= jour(1) then
-        local r = MySQL.single.await(
-            'SELECT COUNT(*) AS n FROM `ash_vipdaily_joueurs` WHERE dernier_jour >= ? AND serie > ?', { jour(1), maSerie })
-        position = r and (r.n + 1) or nil
+        local cache = cachePosition[source]
+        if cache and os.time() < cache.expire and (cache.serie == maSerie or garderPosition) then
+            position = cache.position
+        else
+            local r = MySQL.single.await(
+                'SELECT COUNT(*) AS n FROM `ash_vipdaily_joueurs` WHERE serie > ? AND dernier_jour >= ?', { maSerie, jour(1) })
+            position = r and (r.n + 1) or nil
+            cachePosition[source] = { expire = os.time() + (conf.CacheSecondes or 60), serie = maSerie, position = position }
+        end
     end
     return { top = cacheClassement.liste, position = position, serie = maSerie }
 end
@@ -647,10 +669,10 @@ end
 
 -- État envoyé à l'interface ---------------------------------------------------------------
 
---- connu (optionnel) : { vip } déjà vérifié par l'appelant
+--- connu (optionnel) : { vip, ligne } déjà vérifiés ou écrits par l'appelant : rien n'est relu
 local function etat(source, joueur, cle, connu)
     local vip = connu and connu.vip or (estVip(source) == true)
-    local ligne = ligneJoueur(source, cle, joueur.identifiant)
+    local ligne = connu and connu.ligne or ligneJoueur(source, cle, joueur.identifiant)
     if vip then validerDefis(source, cle, ligne) end
 
     local dejaRecupere = ligne.dernier_jour == jour(0)
@@ -721,7 +743,7 @@ local function etat(source, joueur, cle, connu)
             gros = lotDemain and lotDemain.gros or false,
             max = lotDemain and lotDemain.argent and montantCoffre(lotDemain.argent.montant, rangDemain.mult, bonusMax()) or 0,
         },
-        classement = classement(source, ligne),
+        classement = classement(source, ligne, connu and connu.ligne ~= nil),
     }
 end
 
@@ -853,7 +875,21 @@ local function ouvrirCoffreDuJour(source, joueur, cle)
     ), #manques > 0 and 16753920 or 4054148)
     debug(('%s a ouvert le coffre du jour %d (bonus ×%s)'):format(cle, indexJour, bonus))
 
-    local nouvelEtat = etat(source, joueur, cle, { vip = true })
+    -- Ligne telle qu'écrite ci-dessus (la semaine a été normalisée par ligneJoueur) : inutile de la relire
+    suivis[source] = true
+    local memeSemaine = ligne.semaine == semaine
+    local nouvelEtat = etat(source, joueur, cle, {
+        vip = true,
+        ligne = {
+            dernier_jour = aujourdhui, serie = serie, total = (ligne.total or 0) + 1, nom = nomClassement(joueur),
+            meilleure_serie = math.max(ligne.meilleure_serie or 0, serie), boucliers = boucliersApres, cles = ligne.cles or 0,
+            semaine = semaine,
+            coffres_semaine = memeSemaine and (ligne.coffres_semaine or 0) + 1 or 1,
+            palier_semaine = memeSemaine and (ligne.palier_semaine or 0) + palier or palier,
+            temps_semaine = memeSemaine and (ligne.temps_semaine or 0) or 0,
+            defis_semaine = memeSemaine and (ligne.defis_semaine or 0) or 0,
+        },
+    })
     nouvelEtat.revelation = {
         jour = indexJour,
         base = base,
@@ -926,6 +962,25 @@ lib.callback.register('ash_vipdaily:server:rappel', function(source)
     return ligneJoueur(source, cle, joueur.identifiant).dernier_jour ~= jour(0)
 end)
 
+--- Résumé léger pour le menu pause (ash_pausemenu) : une seule lecture, sans défis, classement ni notification.
+--- Délai séparé du panneau : ouvrir le menu pause ne bloque pas le PNJ juste après.
+lib.callback.register('ash_vipdaily:server:resume', function(source)
+    if not pasTropRapide(source, derniereResume, 2000, false) then return false end
+    local joueur = Bridge.GetPlayer(source)
+    local cle = cleCompte(source)
+    if not joueur or not cle or not attendreBase() then return false end
+    local vip = estVip(source) == true
+    local ligne = ligneJoueur(source, cle, joueur.identifiant)
+    local dejaRecupere = ligne.dernier_jour == jour(0)
+    return {
+        vip = vip,
+        disponible = vip and not dejaRecupere,
+        dejaRecupere = dejaRecupere,
+        serie = serieActive(ligne),
+        secondes = secondesAvantReinit(),
+    }
+end)
+
 local ACTIONS = { recuperer = ouvrirCoffreDuJour, legendaire = ouvrirCoffreLegendaire }
 
 lib.callback.register('ash_vipdaily:server:action', function(source, data)
@@ -987,6 +1042,9 @@ end)
 AddEventHandler('playerDropped', function()
     enregistrerTemps(source)
     debutSession[source] = nil
+    suivis[source] = nil
+    cachePosition[source] = nil
+    derniereResume[source] = nil
     dernierAppel[source] = nil
     derniereOuverture[source] = nil
     verrou[source] = nil

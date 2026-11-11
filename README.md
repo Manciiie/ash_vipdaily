@@ -73,5 +73,5 @@ Hors ash_newplayers : statut mis en cache 10 min pour l'affichage, revérifié s
 
 QBCore, Qbox, ESX (détection automatique). Items : qs-inventory, ox_inventory ou inventaire du framework.
 Notifications : ash_notify (`Config.Notifications`, son réglable par type), ox_lib si ash_notify n'est pas démarrée.
-Menu pause : ash_pausemenu lit l'état du jour (`serie`, `disponible`, `dejaRecupere`) sans changement.
+Menu pause : ash_pausemenu lit un résumé léger de l'état du jour (callback `ash_vipdaily:server:resume`, depuis la v2.0.1).
 0.00 ms au repos.
