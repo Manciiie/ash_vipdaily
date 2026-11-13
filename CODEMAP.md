@@ -3,11 +3,11 @@
 > Généré par `codemap.py` v2 : **ne pas modifier à la main**. Régénérer après chaque modification du code.
 > Format : `nom` suivi du numéro de ligne → lire seulement les lignes utiles (Read avec offset).
 
-**10 fichiers · 2263 lignes** · 8 lua · 1 sql · 1 html
+**10 fichiers · 2287 lignes** · 8 lua · 1 sql · 1 html
 
 ## Ressources FiveM
 
-- **vip_gh** (fx cerulean, v 2.0.3, lua54 yes)
+- **vip_gh** (fx cerulean, v 2.0.4, lua54 yes)
   - partagé : `@ox_lib/init.lua`, `config.lua`, `locales/fr.lua`, `bridge/shared.lua`
   - client : `bridge/client.lua`, `client/main.lua`
   - serveur : `@oxmysql/lib/MySQL.lua`, `bridge/server.lua`, `server/main.lua`
@@ -16,18 +16,18 @@
 
 ## ⚠ Points d'attention
 
-- Callback `ash_vipdaily:server:resume` déclaré `server/main.lua:967` mais jamais appelé ici (code mort ou utilisé ailleurs)
+- Callback `ash_vipdaily:server:ouvrir` déclaré `server/main.lua:951` mais jamais appelé ici (code mort ou utilisé ailleurs)
+- Callback `ash_vipdaily:server:resume` déclaré `server/main.lua:978` mais jamais appelé ici (code mort ou utilisé ailleurs)
 
 ## Liens entre fichiers
 
 - `ash_vipdaily:client:notifier` : émis `server/main.lua:25` → écouté `client/main.lua:37`
-- callback `ash_vipdaily:server:action` : déclaré `server/main.lua:986` ← appelé `client/main.lua:70`
-- callback `ash_vipdaily:server:ouvrir` : déclaré `server/main.lua:940` ← appelé `client/main.lua:46`
-- callback `ash_vipdaily:server:rappel` : déclaré `server/main.lua:956` ← appelé `client/main.lua:205`
-- NUI `action` : JS `html/index.html:385`, `html/index.html:397` → Lua `client/main.lua:68`
-- NUI `fermer` : JS `html/index.html:412`, `html/index.html:435` → Lua `client/main.lua:63`
-- NUI action `fermer` : Lua `client/main.lua:58` → JS `html/index.html:427`
-- NUI action `ouvrir` : Lua `client/main.lua:51` → JS `html/index.html:417`
+- callback `ash_vipdaily:server:action` : déclaré `server/main.lua:998` ← appelé `client/main.lua:78`
+- callback `ash_vipdaily:server:rappel` : déclaré `server/main.lua:967` ← appelé `client/main.lua:213`
+- NUI `action` : JS `html/index.html:389`, `html/index.html:401` → Lua `client/main.lua:76`
+- NUI `fermer` : JS `html/index.html:416`, `html/index.html:439` → Lua `client/main.lua:71`
+- NUI action `fermer` : Lua `client/main.lua:66` → JS `html/index.html:431`
+- NUI action `ouvrir` : Lua `client/main.lua:59` → JS `html/index.html:421`
 
 ## Fichiers
 
@@ -55,20 +55,20 @@
 - framework : Qbox, Bridge
 - fonctions : `demarree(ressource)` 6, `detecter()` 11
 
-### client/main.lua — client · 209 l.
+### client/main.lua — client · 217 l.
 - framework : ox_lib, Bridge
-- écoute (events) : `ash_vipdaily:client:notifier` 37, `onResourceStop` 192
-- callbacks appelés : `ash_vipdaily:server:ouvrir` 46, `ash_vipdaily:server:action` 70, `ash_vipdaily:server:rappel` 205
-- NUI : callbacks reçus : `fermer` 63, `action` 68
-- NUI : messages envoyés : `ouvrir` 51, `fermer` 58
-- exports fournis : `GuiderVersPnj` 184
-- exports utilisés : `ox_target:removeLocalEntity` 93, `ox_target:addLocalEntity` 120
-- fonctions : `notifier(message, typeNotif, duree)` 14, `ouvrir()` 42, `fermer()` 54, `supprimerPed()` 90, `creerPed()` 100, `cacherTexte()` 131, `nearby()` 164, `onExit()` 175
+- écoute (events) : `ash_vipdaily:client:notifier` 37, `onResourceStop` 200
+- callbacks appelés : `ash_vipdaily:server:action` 78, `ash_vipdaily:server:rappel` 213
+- NUI : callbacks reçus : `fermer` 71, `action` 76
+- NUI : messages envoyés : `ouvrir` 59, `fermer` 66
+- exports fournis : `GuiderVersPnj` 192
+- exports utilisés : `ox_target:removeLocalEntity` 101, `ox_target:addLocalEntity` 128
+- fonctions : `notifier(message, typeNotif, duree)` 14, `ouvrir()` 44, `fermer()` 62, `supprimerPed()` 98, `creerPed()` 108, `cacherTexte()` 139, `nearby()` 172, `onExit()` 183
 
-### html/index.html — NUI · 440 l.
-- NUI : callbacks envoyés au Lua : `action` 385, `action` 397, `fermer` 412, `fermer` 435
-- NUI : actions reçues : `ouvrir` 417, `fermer` 427
-- fonctions : `argent(n)` 138, `virgule(x)` 141, `envoyer(nom, donnees = {})` 148, `texte(id, valeur)` 156, `el(balise, classe, contenu)` 161, `puces(conteneur, items)` 168, `nbJours()` 178, `lot(jour)` 179, `entete()` 182, `coffre()` 191, `demain()` 239, `chaine()` 250, `rangs()` 283, `cycle()` 302, `defis()` 313, `classement()` 341, `rangee(pos, nom, serie, moi)` 357, `rendre()` 365, `attendre(ms)` 378
+### html/index.html — NUI · 444 l.
+- NUI : callbacks envoyés au Lua : `action` 389, `action` 401, `fermer` 416, `fermer` 439
+- NUI : actions reçues : `ouvrir` 421, `fermer` 431
+- fonctions : `argent(n)` 138, `virgule(x)` 141, `envoyer(nom, donnees = {})` 148, `texte(id, valeur)` 156, `el(balise, classe, contenu)` 161, `puces(conteneur, items)` 168, `nbJours()` 178, `lot(jour)` 179, `entete()` 182, `coffre()` 191, `demain()` 241, `chaine()` 254, `rangs()` 287, `cycle()` 306, `defis()` 317, `classement()` 345, `rangee(pos, nom, serie, moi)` 361, `rendre()` 369, `attendre(ms)` 382
 - écrans / sections : `col-coffre` 35
 - styles : `style.css`
 - script intégré : `<script>` 130
@@ -76,11 +76,11 @@
 ### locales/fr.lua — partagé · 42 l.
 - fonctions : `_L(cle, ...)` 35
 
-### server/main.lua — serveur · 1052 l.
+### server/main.lua — serveur · 1064 l.
 - framework : ox_lib, Bridge
-- écoute (events) : `playerJoining` 530, `playerDropped` 1042
+- écoute (events) : `playerJoining` 536, `playerDropped` 1054
 - émet → client : `ash_vipdaily:client:notifier` 25
-- callbacks déclarés : `ash_vipdaily:server:ouvrir` 940, `ash_vipdaily:server:rappel` 956, `ash_vipdaily:server:resume` 967, `ash_vipdaily:server:action` 986
-- fonctions : `debug(...)` 15, `avertir(message)` 19, `notifier(source, message, typeNotif)` 24, `estStaff(source)` 28, `autorise(source)` 33, `pasTropRapide(source, historique, delai, prevenir)` 43, `logDiscord(titre, description, couleur)` 54, `verifierConfig()` 74, `cleCompte(source)` 129, `idDiscord(source)` 136, `roleDiscordVip(source)` 142, `terminer(vip, erreur)` 155, `vipParRessource(source, forcer)` 190, `estVip(source, forcer)` 216, `jour(decalageJours)` 256, `semaineCourante()` 261, `secondesAvantReinit()` 268, `indexRecompense(serie)` 274, `itemsAffichables(items)` 280, `listeRecompenses()` 289, `rangPour(serie)` 307, `tirerBonus()` 317, `bonusMax()` 329, `montantCoffre(base, multRang, bonus)` 336, `attendreBase()` 405, `ligneVide()` 420, `personnagesDuCompte(source, personnageActuel)` 430, `ajouter(id)` 432, `ligneBrute(source, cle, personnageActuel)` 471, `ligneJoueur(source, cle, personnageActuel)` 506, `tempsSession(source)` 539, `enregistrerTemps(source)` 547, `serieActive(ligne)` 576, `serieSuivante(ligne)` 584, `progressionDefi(defi, ligne, source)` 590, `validerDefis(source, cle, ligne)` 599, `classement(source, ligne, garderPosition)` 634, `nomClassement(joueur)` 665, `etat(source, joueur, cle, connu)` 673, `donnerRecompense(source, recompense, raison)` 753, `presDuPnj(source)` 799, `ouvrirCoffreDuJour(source, joueur, cle)` 811, `ouvrirCoffreLegendaire(source, joueur, cle)` 906, `finir(resultat)` 1007
-- tables SQL : `information_schema` 379, `information_schema` 395, `users` 451, `players` 455, `ash_vipdaily_joueurs` 489, `ash_vipdaily_joueurs` 493, `ash_vipdaily_joueurs` 655, `ash_vipdaily_joueurs` 833, `ash_vipdaily_joueurs` 910, `ash_vipdaily_joueurs` 919
-- threads : 3 (l. 357, 534, 566)
+- callbacks déclarés : `ash_vipdaily:server:ouvrir` 951, `ash_vipdaily:server:rappel` 967, `ash_vipdaily:server:resume` 978, `ash_vipdaily:server:action` 998
+- fonctions : `debug(...)` 15, `avertir(message)` 19, `notifier(source, message, typeNotif)` 24, `estStaff(source)` 28, `autorise(source)` 33, `pasTropRapide(source, historique, delai, prevenir)` 43, `logDiscord(titre, description, couleur)` 54, `verifierConfig()` 74, `cleCompte(source)` 129, `idDiscord(source)` 136, `roleDiscordVip(source)` 142, `terminer(vip, erreur)` 155, `vipParRessource(source, forcer)` 190, `estVip(source, forcer)` 216, `jour(decalageJours)` 256, `semaineCourante()` 261, `secondesAvantReinit()` 268, `indexRecompense(serie)` 274, `itemsAffichables(items)` 280, `listeRecompenses()` 289, `rangPour(serie)` 307, `tirerBonus()` 317, `bonusMax()` 329, `montantCoffre(base, multRang, bonus)` 336, `attendreBase()` 411, `ligneVide()` 426, `personnagesDuCompte(source, personnageActuel)` 436, `ajouter(id)` 438, `ligneBrute(source, cle, personnageActuel)` 477, `ligneJoueur(source, cle, personnageActuel)` 512, `tempsSession(source)` 545, `enregistrerTemps(source)` 553, `serieActive(ligne)` 582, `serieSuivante(ligne)` 590, `progressionDefi(defi, ligne, source)` 596, `validerDefis(source, cle, ligne)` 605, `classement(source, ligne, garderPosition)` 640, `nomClassement(joueur)` 674, `etat(source, joueur, cle, connu)` 682, `donnerRecompense(source, recompense, raison)` 764, `presDuPnj(source)` 810, `ouvrirCoffreDuJour(source, joueur, cle)` 822, `ouvrirCoffreLegendaire(source, joueur, cle)` 917, `finir(resultat)` 1019
+- tables SQL : `information_schema` 380, `ash_vipdaily_joueurs` 392, `information_schema` 401, `users` 457, `players` 461, `ash_vipdaily_joueurs` 495, `ash_vipdaily_joueurs` 499, `ash_vipdaily_joueurs` 664, `ash_vipdaily_joueurs` 844, `ash_vipdaily_joueurs` 921, `ash_vipdaily_joueurs` 930
+- threads : 3 (l. 358, 540, 572)

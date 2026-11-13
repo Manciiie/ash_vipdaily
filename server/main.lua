@@ -334,7 +334,8 @@ end
 
 --- Argent du coffre : base × rang × bonus, arrondi à la centaine, jamais au-delà de Config.MontantMax
 local function montantCoffre(base, multRang, bonus)
-    return math.min(math.floor(base * multRang * bonus / 100) * 100, Config.MontantMax)
+    -- + 1e-6 : un produit comme 3299,9999999 (imprécision des décimaux) ne perd pas 100 $
+    return math.min(math.floor(base * multRang * bonus / 100 + 1e-6) * 100, Config.MontantMax)
 end
 
 -- Base de données -----------------------------------------------------------------
@@ -385,6 +386,11 @@ CreateThread(function()
             local ok, err = pcall(MySQL.query.await, colonne.sql)
             if ok then
                 print(('[ash_vipdaily] colonne %s ajoutée à la table'):format(colonne.nom))
+                -- Les comptes d'avant la v2 reçoivent eux aussi les boucliers de départ
+                local depart = (Config.Boucliers and Config.Boucliers.Depart) or 0
+                if colonne.nom == 'boucliers' and depart > 0 then
+                    MySQL.update.await('UPDATE `ash_vipdaily_joueurs` SET boucliers = ?', { depart })
+                end
             else
                 print(('^1[ash_vipdaily] impossible d\'ajouter la colonne %s : %s^0'):format(colonne.nom, tostring(err)))
             end
@@ -638,10 +644,13 @@ local function classement(source, ligne, garderPosition)
         local lignes = MySQL.query.await([[
             SELECT nom, serie FROM `ash_vipdaily_joueurs`
             WHERE dernier_jour >= ? AND nom IS NOT NULL AND serie > 0
-            ORDER BY serie DESC LIMIT ?
-        ]], { jour(1), math.floor(conf.Taille or 5) }) or {}
+            ORDER BY serie DESC LIMIT 10
+        ]], { jour(1) }) or {}
+        -- LIMIT fixe (un LIMIT en paramètre est refusé par certaines versions de MySQL), coupé ici à Taille
         local liste = {}
-        for i, l in ipairs(lignes) do liste[i] = { nom = l.nom, serie = l.serie } end
+        for i = 1, math.min(#lignes, math.floor(conf.Taille or 5)) do
+            liste[i] = { nom = lignes[i].nom, serie = lignes[i].serie }
+        end
         cacheClassement = { expire = os.time() + (conf.CacheSecondes or 60), liste = liste }
     end
 
@@ -691,8 +700,10 @@ local function etat(source, joueur, cle, connu)
     local recompenses = listeRecompenses()
 
     -- Demain : le coffre suivant celui d'aujourd'hui
-    local jourDemain = indexRecompense(dejaRecupere and (ligne.serie or 0) + 2 or prochaineSerie + 1)
-    local rangDemain = rangPour(dejaRecupere and (ligne.serie or 0) + 2 or prochaineSerie + 1)
+    -- (coffre du jour déjà ouvert : le coffre mis en avant EST celui de demain)
+    local serieDemain = dejaRecupere and prochaineSerie or prochaineSerie + 1
+    local jourDemain = indexRecompense(serieDemain)
+    local rangDemain = rangPour(serieDemain)
     local lotDemain = recompenses[jourDemain]
 
     local defis = {}
@@ -965,6 +976,7 @@ end)
 --- Résumé léger pour le menu pause (ash_pausemenu) : une seule lecture, sans défis, classement ni notification.
 --- Délai séparé du panneau : ouvrir le menu pause ne bloque pas le PNJ juste après.
 lib.callback.register('ash_vipdaily:server:resume', function(source)
+    if Config.StaffSeulement and not estStaff(source) then return false end
     if not pasTropRapide(source, derniereResume, 2000, false) then return false end
     local joueur = Bridge.GetPlayer(source)
     local cle = cleCompte(source)

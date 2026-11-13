@@ -39,11 +39,19 @@ RegisterNetEvent('ash_vipdaily:client:notifier', function(message, typeNotif)
     notifier(message, typeNotif)
 end)
 
+local ouvertureEnCours = false   -- une seule demande au serveur à la fois (double appui sur E)
+
 local function ouvrir()
-    if nuiOuverte then return end
+    if nuiOuverte or ouvertureEnCours then return end
+    ouvertureEnCours = true
 
     -- Le serveur vérifie les permissions et renvoie les données à afficher
-    local donnees = lib.callback.await('ash_vipdaily:server:ouvrir', false)
+    local ok, donnees = pcall(lib.callback.await, 'ash_vipdaily:server:ouvrir', false)
+    ouvertureEnCours = false
+    if not ok then
+        print(('^1[ash_vipdaily] ouverture du panneau impossible : %s^0'):format(tostring(donnees)))
+        return
+    end
     if not donnees then return end
 
     nuiOuverte = true

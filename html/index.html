@@ -193,7 +193,9 @@
             const l = lot(jour);
             const palier = !!l.gros;
             $('col-coffre').classList.toggle('palier', palier);
-            texte('coffre-titre', `Coffre du jour ${jour} / ${nbJours()}`);
+            // Coffre du jour déjà ouvert (panneau rouvert) : le coffre affiché est celui de demain
+            const prochain = !revelation && etat.dejaRecupere;
+            texte('coffre-titre', `${prochain ? 'Prochain coffre : jour' : 'Coffre du jour'} ${jour} / ${nbJours()}`);
 
             const bouton = $('btn-coffre');
             const scene = $('coffre');
@@ -238,10 +240,12 @@
 
         function demain() {
             const d = etat.demain || {};
-            const fin = etat.jourCycle >= nbJours() && etat.dejaRecupere;
+            // Demain = jour 1 alors qu'une série est en cours : le cycle recommence
+            const fin = d.jour === 1 && (etat.serie > 0 || etat.dejaRecupere);
             $('demain').classList.toggle('palier', !!d.gros);
             texte('demain-titre', fin ? 'Demain : nouveau cycle' : `Demain : ${d.gros ? 'coffre de palier' : 'coffre VIP'}`);
             if (!etat.vip) texte('demain-texte', 'Chaque jour un coffre, plus gros avec la série.');
+            else if (!d.max) texte('demain-texte', 'Reviens demain pour continuer ta série.');
             else if (d.gros) texte('demain-texte', `Jusqu'à ${argent(d.max)} avec le bonus. Ne casse pas ta série.`);
             else texte('demain-texte', `Jusqu'à ${argent(d.max)}. Reviens pour garder ton rang ${etat.rang.nom}.`);
         }
