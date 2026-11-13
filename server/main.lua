@@ -404,6 +404,19 @@ CreateThread(function()
         local ok, err = pcall(MySQL.query.await, 'ALTER TABLE `ash_vipdaily_joueurs` ADD INDEX `idx_classement` (`serie`, `dernier_jour`)')
         if not ok then print(('^3[ash_vipdaily] index du classement non créé : %s^0'):format(tostring(err))) end
     end
+
+    -- Une seule fois (v2.0.5) : les comptes créés avant la v2 n'avaient reçu aucun bouclier de départ.
+    -- Le marqueur est gardé par le serveur (KVP de la ressource), aucun SQL à importer.
+    local depart = (Config.Boucliers and Config.Boucliers.Depart) or 0
+    if depart > 0 and GetResourceKvpInt('boucliers_depart_donnes') ~= 1 then
+        local ok, resultat = pcall(MySQL.update.await, 'UPDATE `ash_vipdaily_joueurs` SET boucliers = ? WHERE boucliers = 0', { depart })
+        if ok then
+            SetResourceKvpInt('boucliers_depart_donnes', 1)
+            print(('[ash_vipdaily] bouclier de départ donné à %s compte(s) qui n\'en avaient aucun'):format(tostring(resultat)))
+        else
+            print(('^1[ash_vipdaily] boucliers de départ non donnés : %s^0'):format(tostring(resultat)))
+        end
+    end
     basePrete = true
 end)
 

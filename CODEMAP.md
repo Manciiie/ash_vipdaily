@@ -3,11 +3,11 @@
 > Généré par `codemap.py` v2 : **ne pas modifier à la main**. Régénérer après chaque modification du code.
 > Format : `nom` suivi du numéro de ligne → lire seulement les lignes utiles (Read avec offset).
 
-**10 fichiers · 2287 lignes** · 8 lua · 1 sql · 1 html
+**10 fichiers · 2300 lignes** · 8 lua · 1 sql · 1 html
 
 ## Ressources FiveM
 
-- **vip_gh** (fx cerulean, v 2.0.4, lua54 yes)
+- **vip_gh** (fx cerulean, v 2.0.5, lua54 yes)
   - partagé : `@ox_lib/init.lua`, `config.lua`, `locales/fr.lua`, `bridge/shared.lua`
   - client : `bridge/client.lua`, `client/main.lua`
   - serveur : `@oxmysql/lib/MySQL.lua`, `bridge/server.lua`, `server/main.lua`
@@ -16,14 +16,14 @@
 
 ## ⚠ Points d'attention
 
-- Callback `ash_vipdaily:server:ouvrir` déclaré `server/main.lua:951` mais jamais appelé ici (code mort ou utilisé ailleurs)
-- Callback `ash_vipdaily:server:resume` déclaré `server/main.lua:978` mais jamais appelé ici (code mort ou utilisé ailleurs)
+- Callback `ash_vipdaily:server:ouvrir` déclaré `server/main.lua:964` mais jamais appelé ici (code mort ou utilisé ailleurs)
+- Callback `ash_vipdaily:server:resume` déclaré `server/main.lua:991` mais jamais appelé ici (code mort ou utilisé ailleurs)
 
 ## Liens entre fichiers
 
 - `ash_vipdaily:client:notifier` : émis `server/main.lua:25` → écouté `client/main.lua:37`
-- callback `ash_vipdaily:server:action` : déclaré `server/main.lua:998` ← appelé `client/main.lua:78`
-- callback `ash_vipdaily:server:rappel` : déclaré `server/main.lua:967` ← appelé `client/main.lua:213`
+- callback `ash_vipdaily:server:action` : déclaré `server/main.lua:1011` ← appelé `client/main.lua:78`
+- callback `ash_vipdaily:server:rappel` : déclaré `server/main.lua:980` ← appelé `client/main.lua:213`
 - NUI `action` : JS `html/index.html:389`, `html/index.html:401` → Lua `client/main.lua:76`
 - NUI `fermer` : JS `html/index.html:416`, `html/index.html:439` → Lua `client/main.lua:71`
 - NUI action `fermer` : Lua `client/main.lua:66` → JS `html/index.html:431`
@@ -76,11 +76,11 @@
 ### locales/fr.lua — partagé · 42 l.
 - fonctions : `_L(cle, ...)` 35
 
-### server/main.lua — serveur · 1064 l.
+### server/main.lua — serveur · 1077 l.
 - framework : ox_lib, Bridge
-- écoute (events) : `playerJoining` 536, `playerDropped` 1054
+- écoute (events) : `playerJoining` 549, `playerDropped` 1067
 - émet → client : `ash_vipdaily:client:notifier` 25
-- callbacks déclarés : `ash_vipdaily:server:ouvrir` 951, `ash_vipdaily:server:rappel` 967, `ash_vipdaily:server:resume` 978, `ash_vipdaily:server:action` 998
-- fonctions : `debug(...)` 15, `avertir(message)` 19, `notifier(source, message, typeNotif)` 24, `estStaff(source)` 28, `autorise(source)` 33, `pasTropRapide(source, historique, delai, prevenir)` 43, `logDiscord(titre, description, couleur)` 54, `verifierConfig()` 74, `cleCompte(source)` 129, `idDiscord(source)` 136, `roleDiscordVip(source)` 142, `terminer(vip, erreur)` 155, `vipParRessource(source, forcer)` 190, `estVip(source, forcer)` 216, `jour(decalageJours)` 256, `semaineCourante()` 261, `secondesAvantReinit()` 268, `indexRecompense(serie)` 274, `itemsAffichables(items)` 280, `listeRecompenses()` 289, `rangPour(serie)` 307, `tirerBonus()` 317, `bonusMax()` 329, `montantCoffre(base, multRang, bonus)` 336, `attendreBase()` 411, `ligneVide()` 426, `personnagesDuCompte(source, personnageActuel)` 436, `ajouter(id)` 438, `ligneBrute(source, cle, personnageActuel)` 477, `ligneJoueur(source, cle, personnageActuel)` 512, `tempsSession(source)` 545, `enregistrerTemps(source)` 553, `serieActive(ligne)` 582, `serieSuivante(ligne)` 590, `progressionDefi(defi, ligne, source)` 596, `validerDefis(source, cle, ligne)` 605, `classement(source, ligne, garderPosition)` 640, `nomClassement(joueur)` 674, `etat(source, joueur, cle, connu)` 682, `donnerRecompense(source, recompense, raison)` 764, `presDuPnj(source)` 810, `ouvrirCoffreDuJour(source, joueur, cle)` 822, `ouvrirCoffreLegendaire(source, joueur, cle)` 917, `finir(resultat)` 1019
-- tables SQL : `information_schema` 380, `ash_vipdaily_joueurs` 392, `information_schema` 401, `users` 457, `players` 461, `ash_vipdaily_joueurs` 495, `ash_vipdaily_joueurs` 499, `ash_vipdaily_joueurs` 664, `ash_vipdaily_joueurs` 844, `ash_vipdaily_joueurs` 921, `ash_vipdaily_joueurs` 930
-- threads : 3 (l. 358, 540, 572)
+- callbacks déclarés : `ash_vipdaily:server:ouvrir` 964, `ash_vipdaily:server:rappel` 980, `ash_vipdaily:server:resume` 991, `ash_vipdaily:server:action` 1011
+- fonctions : `debug(...)` 15, `avertir(message)` 19, `notifier(source, message, typeNotif)` 24, `estStaff(source)` 28, `autorise(source)` 33, `pasTropRapide(source, historique, delai, prevenir)` 43, `logDiscord(titre, description, couleur)` 54, `verifierConfig()` 74, `cleCompte(source)` 129, `idDiscord(source)` 136, `roleDiscordVip(source)` 142, `terminer(vip, erreur)` 155, `vipParRessource(source, forcer)` 190, `estVip(source, forcer)` 216, `jour(decalageJours)` 256, `semaineCourante()` 261, `secondesAvantReinit()` 268, `indexRecompense(serie)` 274, `itemsAffichables(items)` 280, `listeRecompenses()` 289, `rangPour(serie)` 307, `tirerBonus()` 317, `bonusMax()` 329, `montantCoffre(base, multRang, bonus)` 336, `attendreBase()` 424, `ligneVide()` 439, `personnagesDuCompte(source, personnageActuel)` 449, `ajouter(id)` 451, `ligneBrute(source, cle, personnageActuel)` 490, `ligneJoueur(source, cle, personnageActuel)` 525, `tempsSession(source)` 558, `enregistrerTemps(source)` 566, `serieActive(ligne)` 595, `serieSuivante(ligne)` 603, `progressionDefi(defi, ligne, source)` 609, `validerDefis(source, cle, ligne)` 618, `classement(source, ligne, garderPosition)` 653, `nomClassement(joueur)` 687, `etat(source, joueur, cle, connu)` 695, `donnerRecompense(source, recompense, raison)` 777, `presDuPnj(source)` 823, `ouvrirCoffreDuJour(source, joueur, cle)` 835, `ouvrirCoffreLegendaire(source, joueur, cle)` 930, `finir(resultat)` 1032
+- tables SQL : `information_schema` 380, `ash_vipdaily_joueurs` 392, `information_schema` 401, `users` 470, `players` 474, `ash_vipdaily_joueurs` 508, `ash_vipdaily_joueurs` 512, `ash_vipdaily_joueurs` 677, `ash_vipdaily_joueurs` 857, `ash_vipdaily_joueurs` 934, `ash_vipdaily_joueurs` 943
+- threads : 3 (l. 358, 553, 585)
