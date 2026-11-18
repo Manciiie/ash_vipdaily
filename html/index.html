@@ -351,7 +351,8 @@
             if (!c.top.length) liste.appendChild(el('p', 'vip-vide', 'Aucune série en cours pour le moment.'));
             let dejaListe = false;
             c.top.forEach((l, i) => {
-                const moi = c.position === i + 1;
+                // Le serveur marque la ligne du joueur (fiable même quand plusieurs VIP ont la même série)
+                const moi = l.moi === true;
                 if (moi) dejaListe = true;
                 liste.appendChild(rangee(String(i + 1), moi ? 'Toi' : l.nom, l.serie, moi));
             });

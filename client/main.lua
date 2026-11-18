@@ -75,7 +75,12 @@ end)
 
 RegisterNUICallback('action', function(data, cb)
     -- Le serveur renvoie le nouvel état (ou false) : l'interface se met à jour sans rouvrir
-    local etat = lib.callback.await('ash_vipdaily:server:action', false, data)
+    -- Protégé : sans réponse du serveur, l'interface reçoit quand même un refus (sinon le bouton reste bloqué)
+    local ok, etat = pcall(lib.callback.await, 'ash_vipdaily:server:action', false, data)
+    if not ok then
+        print(('^1[ash_vipdaily] action sans réponse du serveur : %s^0'):format(tostring(etat)))
+        etat = nil
+    end
     cb({ ok = etat ~= false and etat ~= nil, etat = etat or nil })
 end)
 
@@ -95,10 +100,15 @@ local ped, blip
 local cibleOx = false
 local texteAffiche = false
 
+local dansZone = false       -- le joueur est à portée d'apparition du PNJ
+local creationEnCours = false
+
 local function supprimerPed()
+    dansZone = false
     if not ped then return end
     if cibleOx then
-        exports.ox_target:removeLocalEntity(ped, 'ash_vipdaily_pnj')
+        -- silence-ok: ox_target peut avoir été arrêté entre-temps, le PNJ doit être supprimé quand même
+        pcall(function() exports.ox_target:removeLocalEntity(ped, 'ash_vipdaily_pnj') end)
         cibleOx = false
     end
     if DoesEntityExist(ped) then DeleteEntity(ped) end
@@ -106,11 +116,19 @@ local function supprimerPed()
 end
 
 local function creerPed()
-    if ped and DoesEntityExist(ped) then return end
+    dansZone = true
+    if creationEnCours or (ped and DoesEntityExist(ped)) then return end
+    creationEnCours = true
     local c = pnj.Coords
     local ok, modele = pcall(lib.requestModel, pnj.Modele, 10000)
+    creationEnCours = false
     if not ok or not modele then
         print(('^3[ash_vipdaily] modèle du PNJ introuvable (%s) : vérifiez Config.Pnj.Modele^0'):format(tostring(pnj.Modele)))
+        return
+    end
+    -- Le joueur est reparti pendant le chargement du modèle : pas de PNJ orphelin
+    if not dansZone then
+        SetModelAsNoLongerNeeded(modele)
         return
     end
 

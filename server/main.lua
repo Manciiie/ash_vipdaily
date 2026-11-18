@@ -355,7 +355,7 @@ local COLONNES_V2 = {
 
 local basePrete = false
 
-CreateThread(function()
+local function preparerBase()
     MySQL.query.await([[
         CREATE TABLE IF NOT EXISTS `ash_vipdaily_joueurs` (
             `identifiant`     VARCHAR(64) NOT NULL,
@@ -416,6 +416,14 @@ CreateThread(function()
         else
             print(('^1[ash_vipdaily] boucliers de départ non donnés : %s^0'):format(tostring(resultat)))
         end
+    end
+end
+
+CreateThread(function()
+    -- Une étape en échec (droits sur information_schema, par exemple) ne doit pas bloquer toute la ressource
+    local ok, err = pcall(preparerBase)
+    if not ok then
+        print(('^1[ash_vipdaily] préparation de la base incomplète : %s^0'):format(tostring(err)))
     end
     basePrete = true
 end)
@@ -563,8 +571,10 @@ end
 --- Ajoute le temps de jeu non enregistré à la semaine du compte. Seuls les comptes qui ont une ligne
 --- sont suivis : pour les autres, aucune requête (leur temps reste compté depuis la connexion).
 --- Une seule requête, sans lecture : les compteurs d'une semaine passée sont remis à zéro dans le même UPDATE.
-local function enregistrerTemps(source)
-    if not suivis[source] or not basePrete then return end
+--- forcer = true (déconnexion, arrêt de la ressource) : enregistre même un compte pas encore reconnu,
+--- sinon un VIP qui n'a ouvert ni le panneau ni le menu pause perdrait tout son temps de jeu.
+local function enregistrerTemps(source, forcer)
+    if (not suivis[source] and not forcer) or not basePrete then return end
     local ecoule = tempsSession(source)
     local cle = cleCompte(source)
     if ecoule <= 0 or not cle then return end
@@ -650,21 +660,27 @@ local cacheClassement = { expire = 0, liste = {} }
 local cachePosition = {}   -- [source] = { expire, serie, position }
 
 --- garderPosition = true : reprend la position en cache même si la série vient de changer (après un coffre)
-local function classement(source, ligne, garderPosition)
+local function classement(source, ligne, garderPosition, cle)
     local conf = Config.Classement
     if not conf or not conf.Actif then return nil end
     if os.time() >= cacheClassement.expire then
         local lignes = MySQL.query.await([[
-            SELECT nom, serie FROM `ash_vipdaily_joueurs`
+            SELECT identifiant, nom, serie FROM `ash_vipdaily_joueurs`
             WHERE dernier_jour >= ? AND nom IS NOT NULL AND serie > 0
-            ORDER BY serie DESC LIMIT 10
+            ORDER BY serie DESC, identifiant LIMIT 10
         ]], { jour(1) }) or {}
         -- LIMIT fixe (un LIMIT en paramètre est refusé par certaines versions de MySQL), coupé ici à Taille
         local liste = {}
         for i = 1, math.min(#lignes, math.floor(conf.Taille or 5)) do
-            liste[i] = { nom = lignes[i].nom, serie = lignes[i].serie }
+            liste[i] = { id = lignes[i].identifiant, nom = lignes[i].nom, serie = lignes[i].serie }
         end
         cacheClassement = { expire = os.time() + (conf.CacheSecondes or 60), liste = liste }
+    end
+
+    -- Liste envoyée au joueur : sans les identifiants, sa propre ligne marquée (fiable même à égalité de série)
+    local top = {}
+    for i, l in ipairs(cacheClassement.liste) do
+        top[i] = { nom = l.nom, serie = l.serie, moi = l.id == cle }
     end
 
     local position
@@ -680,13 +696,27 @@ local function classement(source, ligne, garderPosition)
             cachePosition[source] = { expire = os.time() + (conf.CacheSecondes or 60), serie = maSerie, position = position }
         end
     end
-    return { top = cacheClassement.liste, position = position, serie = maSerie }
+    return { top = top, position = position, serie = maSerie }
 end
 
 --- Nom affiché dans le classement : prénom et initiale du nom
+--- Découpage par caractères et non par octets : couper « É » en deux donnerait un texte invalide
+--- que la base refuse (le coffre ne s'ouvrirait jamais pour ce joueur).
+local CARACTERE = '[%z\1-\127\194-\244][\128-\191]*'
+local function debutTexte(texte, nombre)
+    local morceaux = {}
+    for c in tostring(texte or ''):gmatch(CARACTERE) do
+        if #morceaux >= nombre then break end
+        morceaux[#morceaux + 1] = c
+    end
+    return table.concat(morceaux)
+end
+
 local function nomClassement(joueur)
-    local initiale = (joueur.nom or ''):sub(1, 1)
-    return (initiale ~= '' and ('%s %s.'):format(joueur.prenom or '', initiale) or (joueur.prenom or 'VIP')):sub(1, 64)
+    local prenom = debutTexte(joueur.prenom, 40)
+    local initiale = debutTexte(joueur.nom, 1)
+    if prenom == '' then prenom = 'VIP' end
+    return initiale ~= '' and ('%s %s.'):format(prenom, initiale) or prenom
 end
 
 -- État envoyé à l'interface ---------------------------------------------------------------
@@ -767,7 +797,7 @@ local function etat(source, joueur, cle, connu)
             gros = lotDemain and lotDemain.gros or false,
             max = lotDemain and lotDemain.argent and montantCoffre(lotDemain.argent.montant, rangDemain.mult, bonusMax()) or 0,
         },
-        classement = classement(source, ligne, connu and connu.ligne ~= nil),
+        classement = classement(source, ligne, connu and connu.ligne ~= nil, cle),
     }
 end
 
@@ -879,9 +909,10 @@ local function ouvrirCoffreDuJour(source, joueur, cle)
         -- Rien n'a été donné : on rend le jour au joueur (série, bouclier et compteurs de la semaine)
         MySQL.update.await([[
             UPDATE `ash_vipdaily_joueurs` SET dernier_jour = ?, serie = ?, total = total - 1, boucliers = ?,
+                meilleure_serie = ?,
                 coffres_semaine = GREATEST(coffres_semaine - 1, 0), palier_semaine = GREATEST(palier_semaine - ?, 0)
             WHERE identifiant = ?
-        ]], { ligne.dernier_jour, ligne.serie or 0, boucliersDepart, palier, cle })
+        ]], { ligne.dernier_jour, ligne.serie or 0, boucliersDepart, ligne.meilleure_serie or 0, palier, cle })
         notifier(source, donnes == 'inventaire' and _L('inventaire_plein') or _L('remise_impossible'), 'error')
         return false
     end
@@ -1029,43 +1060,48 @@ lib.callback.register('ash_vipdaily:server:action', function(source, data)
     if verrou[source] then return false end
     verrou[source] = true
 
-    local function finir(resultat)
-        verrou[source] = nil
-        return resultat
-    end
-
-    local joueur = Bridge.GetPlayer(source)
-    local cle = cleCompte(source)
-    if not joueur or not cle then
-        notifier(source, _L('personnage_non_charge'), 'error')
-        return finir(false)
-    end
-
-    -- Statut VIP revérifié au moment d'ouvrir (pas de cache)
-    local vip, erreurVip = estVip(source, true)
-    if not vip then
-        if erreurVip then
-            avertir(('statut VIP de %s illisible : %s'):format(cle, erreurVip))
-            notifier(source, _L('discord_indisponible'), 'error')
-        else
-            notifier(source, _L('pas_vip'), 'error')
+    -- Tout ce qui suit est protégé : une erreur (framework, Discord, base) ne laisse jamais le verrou pris
+    local ok, resultat = pcall(function()
+        local joueur = Bridge.GetPlayer(source)
+        local cle = cleCompte(source)
+        if not joueur or not cle then
+            notifier(source, _L('personnage_non_charge'), 'error')
+            return false
         end
-        return finir(false)
-    end
 
-    local ok, resultat = pcall(action, source, joueur, cle)
+        -- Statut VIP revérifié au moment d'ouvrir (pas de cache)
+        local vip, erreurVip = estVip(source, true)
+        if not vip then
+            if erreurVip then
+                avertir(('statut VIP de %s illisible : %s'):format(cle, erreurVip))
+                notifier(source, _L('discord_indisponible'), 'error')
+            else
+                notifier(source, _L('pas_vip'), 'error')
+            end
+            return false
+        end
+
+        return action(source, joueur, cle)
+    end)
+    verrou[source] = nil
     if not ok then
-        avertir(('action %s de %s en erreur : %s'):format(data.type, cle, tostring(resultat)))
+        avertir(('action %s du joueur %s en erreur : %s'):format(data.type, source, tostring(resultat)))
         notifier(source, _L('action_erreur'), 'error')
-        return finir(false)
+        return false
     end
-    return finir(resultat)
+    return resultat
 end)
 
 -- Nettoyage ---------------------------------------------------------------------------
 
+-- Redémarrage de la ressource : le temps de jeu en cours est enregistré avant de repartir de zéro
+AddEventHandler('onResourceStop', function(ressource)
+    if ressource ~= GetCurrentResourceName() then return end
+    for _, id in ipairs(GetPlayers()) do enregistrerTemps(tonumber(id), true) end
+end)
+
 AddEventHandler('playerDropped', function()
-    enregistrerTemps(source)
+    enregistrerTemps(source, true)
     debutSession[source] = nil
     suivis[source] = nil
     cachePosition[source] = nil
