@@ -197,15 +197,6 @@ Config.CoffreLegendaire = {
     },
 }
 
--------------------------------------------------------------------------------------
--- Classement des meilleures séries VIP en cours (prénom + initiale du nom)
--------------------------------------------------------------------------------------
-Config.Classement = {
-    Actif = true,
-    Taille = 5,           -- nombre de VIP affichés
-    CacheSecondes = 60,   -- le classement est recalculé au plus une fois par minute
-}
-
 -- Prévenir le VIP à la connexion quand une récompense l'attend
 Config.RappelConnexion = false
 

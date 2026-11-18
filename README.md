@@ -31,7 +31,6 @@ La table `ash_vipdaily_joueurs` se crée toute seule, et les colonnes de la v2.0
 - **Défis de la semaine** (`Config.Defis`, remis à zéro le lundi) : ouvrir 5 coffres, jouer 3 h, atteindre un palier.
   Chaque défi réussi donne une **clé** (et un bouclier pour le palier).
 - **Coffre légendaire** (`Config.CoffreLegendaire`) : s'ouvre auprès du PNJ avec 3 clés.
-- **Classement** (`Config.Classement`) : les meilleures séries VIP en cours (prénom + initiale), et ta place.
 
 Le temps de jeu du défi « Jouer 3 h » est compté pour les comptes qui ont déjà ouvert au moins un coffre, enregistré
 toutes les 10 minutes et à la déconnexion.

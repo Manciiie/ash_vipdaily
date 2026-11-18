@@ -87,7 +87,7 @@
                 </div>
             </section>
 
-            <!-- Défis et classement -->
+            <!-- Défis de la semaine -->
             <section class="vip-col-droite">
                 <div class="vip-carte">
                     <div class="vip-ligne-titre">
@@ -102,11 +102,6 @@
                         </div>
                         <button type="button" class="vip-bouton or" id="btn-legendaire" hidden>Ouvrir le coffre légendaire</button>
                     </div>
-                </div>
-
-                <div class="vip-carte vip-classement" id="bloc-classement">
-                    <span class="vip-titre-bloc">Meilleures séries VIP</span>
-                    <div id="classement"></div>
                 </div>
             </section>
         </main>
@@ -313,7 +308,7 @@
             texte('cycle-final', dernier.argent ? `Jour ${n} : ${argent(dernier.argent.montant)}` : '');
         }
 
-        // Défis, clés, classement --------------------------------------------------------
+        // Défis et clés ------------------------------------------------------------------
         function defis() {
             const conteneur = $('defis');
             conteneur.replaceChildren();
@@ -342,31 +337,6 @@
             $('btn-legendaire').hidden = !(etat.vip && etat.cles >= etat.clesRequises);
         }
 
-        function classement() {
-            const c = etat.classement;
-            $('bloc-classement').hidden = !c;
-            if (!c) return;
-            const liste = $('classement');
-            liste.replaceChildren();
-            if (!c.top.length) liste.appendChild(el('p', 'vip-vide', 'Aucune série en cours pour le moment.'));
-            let dejaListe = false;
-            c.top.forEach((l, i) => {
-                // Le serveur marque la ligne du joueur (fiable même quand plusieurs VIP ont la même série)
-                const moi = l.moi === true;
-                if (moi) dejaListe = true;
-                liste.appendChild(rangee(String(i + 1), moi ? 'Toi' : l.nom, l.serie, moi));
-            });
-            if (c.position && !dejaListe) liste.appendChild(rangee(String(c.position), 'Toi', c.serie, true));
-        }
-
-        function rangee(pos, nom, serie, moi) {
-            const r = el('div', 'vip-rangee' + (moi ? ' moi' : ''));
-            r.appendChild(el('span', 'pos', pos));
-            r.appendChild(el('span', 'nom', nom));
-            r.appendChild(el('strong', null, `${serie} j`));
-            return r;
-        }
-
         function rendre() {
             if (!etat) return;
             entete();
@@ -376,7 +346,6 @@
             rangs();
             cycle();
             defis();
-            classement();
         }
 
         // Actions --------------------------------------------------------------------------

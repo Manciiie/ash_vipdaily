@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `ash_vipdaily_joueurs` (
     `dernier_jour`    VARCHAR(10) NULL,              -- jour du dernier coffre ouvert (AAAA-MM-JJ)
     `serie`           INT NOT NULL DEFAULT 0,        -- jours consécutifs
     `total`           INT NOT NULL DEFAULT 0,        -- coffres ouverts au total
-    `nom`             VARCHAR(64) NULL,              -- nom affiché dans le classement (prénom + initiale)
+    `nom`             VARCHAR(64) NULL,              -- inutilisé depuis la v2.1.0 (ancien classement)
     `meilleure_serie` INT NOT NULL DEFAULT 0,
     `boucliers`       INT NOT NULL DEFAULT 0,        -- boucliers de série en réserve
     `cles`            INT NOT NULL DEFAULT 0,        -- clés du coffre légendaire

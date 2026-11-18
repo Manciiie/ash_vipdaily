@@ -253,7 +253,7 @@ button { font: inherit; color: inherit; }
 .vip-barre i { display: block; height: 100%; border-radius: 4px; background: var(--ash-violet); transition: width 0.4s ease; }
 .vip-cycle strong { font-size: 14px; font-variant-numeric: tabular-nums; }
 
-/* Colonne 3 : défis, clés, classement */
+/* Colonne 3 : défis et clés */
 
 .vip-col-droite { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
 
@@ -274,14 +274,6 @@ button { font: inherit; color: inherit; }
 .vip-cles-ligne { display: flex; align-items: center; gap: 10px; font-size: 12px; }
 .vip-cles-ligne b { color: var(--vip-or); }
 .vip-cles .vip-bouton { height: 38px; font-size: 13px; }
-
-.vip-classement { flex: 1; min-height: 0; overflow-y: auto; }
-.vip-classement { gap: 6px; }
-.vip-rangee { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 4px 8px; border-radius: 8px; }
-.vip-rangee .pos { width: 24px; font-weight: 800; color: var(--ash-texte-2); }
-.vip-rangee .nom { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vip-rangee.moi { background: rgba(155, 108, 255, 0.16); border: 1px solid rgba(155, 108, 255, 0.4); }
-.vip-vide { font-size: 12px; color: var(--ash-texte-2); }
 
 /* Coffre légendaire révélé (par-dessus le corps) */
 

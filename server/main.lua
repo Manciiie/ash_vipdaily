@@ -397,14 +397,6 @@ local function preparerBase()
         end
     end
 
-    -- Index du classement (série en cours) : ajouté une fois, aucun SQL à importer
-    local index = MySQL.single.await(
-        "SELECT COUNT(*) AS n FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ash_vipdaily_joueurs' AND INDEX_NAME = 'idx_classement'")
-    if index and index.n == 0 then
-        local ok, err = pcall(MySQL.query.await, 'ALTER TABLE `ash_vipdaily_joueurs` ADD INDEX `idx_classement` (`serie`, `dernier_jour`)')
-        if not ok then print(('^3[ash_vipdaily] index du classement non créé : %s^0'):format(tostring(err))) end
-    end
-
     -- Une seule fois (v2.0.5) : les comptes créés avant la v2 n'avaient reçu aucun bouclier de départ.
     -- Le marqueur est gardé par le serveur (KVP de la ressource), aucun SQL à importer.
     local depart = (Config.Boucliers and Config.Boucliers.Depart) or 0
@@ -599,7 +591,7 @@ CreateThread(function()
     end
 end)
 
--- Série, défis, classement ---------------------------------------------------------------
+-- Série et défis ---------------------------------------------------------------------------
 
 --- Série en cours affichée (0 si elle est cassée)
 local function serieActive(ligne)
@@ -654,69 +646,6 @@ local function validerDefis(source, cle, ligne)
         notifier(source, _L('defi_reussi', label), 'success')
     end
     return gagnes
-end
-
-local cacheClassement = { expire = 0, liste = {} }
-local cachePosition = {}   -- [source] = { expire, serie, position }
-
---- garderPosition = true : reprend la position en cache même si la série vient de changer (après un coffre)
-local function classement(source, ligne, garderPosition, cle)
-    local conf = Config.Classement
-    if not conf or not conf.Actif then return nil end
-    if os.time() >= cacheClassement.expire then
-        local lignes = MySQL.query.await([[
-            SELECT identifiant, nom, serie FROM `ash_vipdaily_joueurs`
-            WHERE dernier_jour >= ? AND nom IS NOT NULL AND serie > 0
-            ORDER BY serie DESC, identifiant LIMIT 10
-        ]], { jour(1) }) or {}
-        -- LIMIT fixe (un LIMIT en paramètre est refusé par certaines versions de MySQL), coupé ici à Taille
-        local liste = {}
-        for i = 1, math.min(#lignes, math.floor(conf.Taille or 5)) do
-            liste[i] = { id = lignes[i].identifiant, nom = lignes[i].nom, serie = lignes[i].serie }
-        end
-        cacheClassement = { expire = os.time() + (conf.CacheSecondes or 60), liste = liste }
-    end
-
-    -- Liste envoyée au joueur : sans les identifiants, sa propre ligne marquée (fiable même à égalité de série)
-    local top = {}
-    for i, l in ipairs(cacheClassement.liste) do
-        top[i] = { nom = l.nom, serie = l.serie, moi = l.id == cle }
-    end
-
-    local position
-    local maSerie = serieActive(ligne)
-    if maSerie > 0 and (ligne.dernier_jour or '') >= jour(1) then
-        local cache = cachePosition[source]
-        if cache and os.time() < cache.expire and (cache.serie == maSerie or garderPosition) then
-            position = cache.position
-        else
-            local r = MySQL.single.await(
-                'SELECT COUNT(*) AS n FROM `ash_vipdaily_joueurs` WHERE serie > ? AND dernier_jour >= ?', { maSerie, jour(1) })
-            position = r and (r.n + 1) or nil
-            cachePosition[source] = { expire = os.time() + (conf.CacheSecondes or 60), serie = maSerie, position = position }
-        end
-    end
-    return { top = top, position = position, serie = maSerie }
-end
-
---- Nom affiché dans le classement : prénom et initiale du nom
---- Découpage par caractères et non par octets : couper « É » en deux donnerait un texte invalide
---- que la base refuse (le coffre ne s'ouvrirait jamais pour ce joueur).
-local CARACTERE = '[%z\1-\127\194-\244][\128-\191]*'
-local function debutTexte(texte, nombre)
-    local morceaux = {}
-    for c in tostring(texte or ''):gmatch(CARACTERE) do
-        if #morceaux >= nombre then break end
-        morceaux[#morceaux + 1] = c
-    end
-    return table.concat(morceaux)
-end
-
-local function nomClassement(joueur)
-    local prenom = debutTexte(joueur.prenom, 40)
-    local initiale = debutTexte(joueur.nom, 1)
-    if prenom == '' then prenom = 'VIP' end
-    return initiale ~= '' and ('%s %s.'):format(prenom, initiale) or prenom
 end
 
 -- État envoyé à l'interface ---------------------------------------------------------------
@@ -797,7 +726,6 @@ local function etat(source, joueur, cle, connu)
             gros = lotDemain and lotDemain.gros or false,
             max = lotDemain and lotDemain.argent and montantCoffre(lotDemain.argent.montant, rangDemain.mult, bonusMax()) or 0,
         },
-        classement = classement(source, ligne, connu and connu.ligne ~= nil, cle),
     }
 end
 
@@ -887,7 +815,7 @@ local function ouvrirCoffreDuJour(source, joueur, cle)
     MySQL.insert.await('INSERT IGNORE INTO `ash_vipdaily_joueurs` (identifiant, boucliers) VALUES (?, ?)', { cle, boucliersDepart })
     local modifie = MySQL.update.await([[
         UPDATE `ash_vipdaily_joueurs` SET
-            dernier_jour = ?, serie = ?, total = total + 1, nom = ?,
+            dernier_jour = ?, serie = ?, total = total + 1,
             meilleure_serie = GREATEST(meilleure_serie, ?), boucliers = ?,
             coffres_semaine = IF(semaine = ?, coffres_semaine + 1, 1),
             palier_semaine  = IF(semaine = ?, palier_semaine + ?, ?),
@@ -895,7 +823,7 @@ local function ouvrirCoffreDuJour(source, joueur, cle)
             defis_semaine   = IF(semaine = ?, defis_semaine, 0),
             semaine = ?
         WHERE identifiant = ? AND (dernier_jour IS NULL OR dernier_jour <> ?)
-    ]], { aujourdhui, serie, nomClassement(joueur), serie, boucliersApres,
+    ]], { aujourdhui, serie, serie, boucliersApres,
           semaine, semaine, palier, palier, semaine, semaine, semaine, cle, aujourdhui })
 
     if modifie ~= 1 then
@@ -936,7 +864,7 @@ local function ouvrirCoffreDuJour(source, joueur, cle)
     local nouvelEtat = etat(source, joueur, cle, {
         vip = true,
         ligne = {
-            dernier_jour = aujourdhui, serie = serie, total = (ligne.total or 0) + 1, nom = nomClassement(joueur),
+            dernier_jour = aujourdhui, serie = serie, total = (ligne.total or 0) + 1,
             meilleure_serie = math.max(ligne.meilleure_serie or 0, serie), boucliers = boucliersApres, cles = ligne.cles or 0,
             semaine = semaine,
             coffres_semaine = memeSemaine and (ligne.coffres_semaine or 0) + 1 or 1,
@@ -1017,7 +945,7 @@ lib.callback.register('ash_vipdaily:server:rappel', function(source)
     return ligneJoueur(source, cle, joueur.identifiant).dernier_jour ~= jour(0)
 end)
 
---- Résumé léger pour le menu pause (ash_pausemenu) : une seule lecture, sans défis, classement ni notification.
+--- Résumé léger pour le menu pause (ash_pausemenu) : une seule lecture, sans défis ni notification.
 --- Délai séparé du panneau : ouvrir le menu pause ne bloque pas le PNJ juste après.
 lib.callback.register('ash_vipdaily:server:resume', function(source)
     if Config.StaffSeulement and not estStaff(source) then return false end
@@ -1104,7 +1032,6 @@ AddEventHandler('playerDropped', function()
     enregistrerTemps(source, true)
     debutSession[source] = nil
     suivis[source] = nil
-    cachePosition[source] = nil
     derniereResume[source] = nil
     dernierAppel[source] = nil
     derniereOuverture[source] = nil
